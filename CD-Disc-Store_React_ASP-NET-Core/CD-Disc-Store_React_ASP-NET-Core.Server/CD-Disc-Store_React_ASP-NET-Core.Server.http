@@ -1,0 +1,6 @@
+@CD_Disc_Store_React_ASP_NET_Core.Server_HostAddress = http://localhost:5016
+
+GET {{CD_Disc_Store_React_ASP_NET_Core.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
