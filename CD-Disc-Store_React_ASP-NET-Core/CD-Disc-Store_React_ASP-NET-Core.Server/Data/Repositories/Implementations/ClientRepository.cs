@@ -16,6 +16,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         {
             this._context = context;
         }
+
         public async Task<Client> GetByIdAsync(Guid? id)
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
@@ -83,6 +84,12 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         public async Task<int> DeleteAsync(Guid id)
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
+
+            if(! await ExistsAsync(id))
+            {
+                return 0;
+            }
+
             return await dbConnection.ExecuteAsync($"DELETE FROM Client WHERE Id = @Id", new { Id = id });
         }
 
