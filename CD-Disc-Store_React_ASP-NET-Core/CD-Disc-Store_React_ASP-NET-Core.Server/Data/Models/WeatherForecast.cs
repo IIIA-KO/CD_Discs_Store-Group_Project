@@ -1,4 +1,4 @@
-namespace CD_Disc_Store_React_ASP_NET_Core.Server
+namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models
 {
     public class WeatherForecast
     {

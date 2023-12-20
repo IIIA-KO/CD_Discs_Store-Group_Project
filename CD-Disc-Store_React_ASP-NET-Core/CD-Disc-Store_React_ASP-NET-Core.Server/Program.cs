@@ -1,4 +1,6 @@
 
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions;
+
 namespace CD_Disc_Store_React_ASP_NET_Core.Server
 {
     public class Program
@@ -7,7 +9,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            builder.Services.RegisterRepositories();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -18,6 +20,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
+
+           
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
