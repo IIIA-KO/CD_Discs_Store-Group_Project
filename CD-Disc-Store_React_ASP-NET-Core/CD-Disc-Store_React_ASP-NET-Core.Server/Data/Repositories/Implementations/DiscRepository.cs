@@ -26,7 +26,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
                 throw new NullReferenceException(DISC_NOT_FOUND_BY_ID_ERROR);
             }
 
-            return await dbConnection.QueryFirstOrDefaultAsync<Disc>($"SELECT * FROM Disc WHERE Id = @Id", new { Id = id });
+            return await dbConnection.QueryFirstOrDefaultAsync<Disc>($"SELECT * FROM Disc WHERE Id = @Id", new { Id = id })
+                ?? throw new NullReferenceException(DISC_NOT_FOUND_BY_ID_ERROR);
         }
 
         public async Task<IReadOnlyList<Disc>> GetAllAsync()

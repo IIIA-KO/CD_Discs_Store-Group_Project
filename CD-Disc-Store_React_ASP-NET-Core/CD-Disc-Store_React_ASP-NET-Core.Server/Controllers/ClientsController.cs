@@ -73,12 +73,12 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpPut("Edit")]
         public async Task<int> Edit(Guid? id, [Bind("Id,FirstName,LastName,Address,City,ContactPhone,ContactMail,BirthDay,MarriedStatus,Sex,HasChild")] Client client)
         {
-            if(id == null)
+            if (id == null)
             {
                 return 0;
             }
 
-            if(id != client.Id)
+            if (id != client.Id)
             {
                 return 0;
             }
@@ -87,9 +87,9 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             {
                 await this._clientRepository.UpdateAsync(client);
             }
-            catch(Exception)
+            catch (Exception)
             {
-                if(!await this._clientRepository.ExistsAsync(client.Id))
+                if (!await this._clientRepository.ExistsAsync(client.Id))
                 {
                     return 0;
                 }
