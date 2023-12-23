@@ -44,7 +44,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpPost("Create")]
         public async Task<int> Create([Bind("Id,Name,Price,LeftOnStock,Rating")] Disc disc)
         {
-            if (!ModelState.IsValid && !ValidateContactDetails(disc))
+            if (!ModelState.IsValid)
             {
                 return 0;
             }
