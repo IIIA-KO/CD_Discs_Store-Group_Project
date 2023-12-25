@@ -2,6 +2,7 @@
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Atributes;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using System.Text.RegularExpressions;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
@@ -18,9 +19,24 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("Index")]
-        public async Task<ActionResult<IReadOnlyList<Client>>> Index()
+        public async Task<ActionResult<IReadOnlyList<Client>>> Index(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            return Ok(await this._clientRepository.GetAllAsync());
+            var model = new IndexViewModel<Client>
+            {
+                SearchText = searchText,
+                SortOrder = sortOrder,
+                SortFieldName = sortField ?? "Id",
+                Skip = skip,
+                CountItems = await this._clientRepository.CountProcessedDataAsync(searchText),
+                PageSize = 20
+            };
+
+            return Ok(model.Items = await this._clientRepository.GetProcessedAsync(
+                        model.SearchText,
+                        model.SortOrder,
+                        model.SortFieldName,
+                        model.Skip,
+                        model.PageSize));
         }
 
         [HttpGet("{id}")]
@@ -57,12 +73,12 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpPut("Edit")]
         public async Task<int> Edit(Guid? id, [Bind("Id,FirstName,LastName,Address,City,ContactPhone,ContactMail,BirthDay,MarriedStatus,Sex,HasChild")] Client client)
         {
-            if(id == null)
+            if (id == null)
             {
                 return 0;
             }
 
-            if(id != client.Id)
+            if (id != client.Id)
             {
                 return 0;
             }
@@ -71,9 +87,9 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             {
                 await this._clientRepository.UpdateAsync(client);
             }
-            catch(Exception)
+            catch (Exception)
             {
-                if(!await this._clientRepository.ExistsAsync(client.Id))
+                if (!await this._clientRepository.ExistsAsync(client.Id))
                 {
                     return 0;
                 }
