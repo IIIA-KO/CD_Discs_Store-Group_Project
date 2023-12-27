@@ -13,6 +13,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions
             services.AddSingleton<IDapperContext, DapperContext>();
 
             services.AddScoped<IClientRepository, ClientRepository>();
+            services.AddScoped<IOperationLogRepository, OperationLogRepository>();
             services.AddScoped<IMusicRepository, MusicRepository>();
             services.AddScoped<IDiscRepository, DiscRepository>();
             services.AddScoped<IFilmRepository, FilmRepositiry>();
