@@ -1,5 +1,5 @@
-
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions;
+using Microsoft.AspNetCore.Identity;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server
 {
@@ -12,18 +12,19 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
             builder.Services.RegisterRepositories();
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+            builder.Services.RegisterIdentity(builder.Configuration);
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
+            app.MapIdentityApi<IdentityUser>();
+
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
-           
-
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -32,8 +33,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 
