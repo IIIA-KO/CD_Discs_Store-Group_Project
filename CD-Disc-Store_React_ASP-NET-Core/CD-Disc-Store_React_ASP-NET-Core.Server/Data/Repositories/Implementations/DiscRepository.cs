@@ -42,7 +42,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
 
-            return await dbConnection.ExecuteAsync("INSERT INTO Disc (Id, [Name], Price, LeftOnStock, Rating) VALUES (@Id, @Name, @Price, @LeftOnStock, @Rating)", entity);
+            return await dbConnection.ExecuteAsync("INSERT INTO Disc (Id, [Name], Price, LeftOnStock, Rating, CoverImagePath) VALUES (@Id, @Name, @Price, @LeftOnStock, @Rating, @CoverImagePath)", entity);
         }
 
         public async Task<int> UpdateAsync(Disc entity)
@@ -63,7 +63,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
             using IDbConnection dbConnection = this._context.CreateConnection();
 
-            return await dbConnection.ExecuteAsync("UPDATE Disc SET Name = @Name, Price = @Price, LeftOnStock = @LeftOnStock, Rating = @Rating WHERE Id = @Id", entity);
+            return await dbConnection.ExecuteAsync("UPDATE Disc SET Name = @Name, Price = @Price, LeftOnStock = @LeftOnStock, Rating = @Rating, CoverImagePath = @CoverImagePath WHERE Id = @Id", entity);
         }
 
         public async Task<int> DeleteAsync(Guid id)
@@ -83,7 +83,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             return currentEntity.Name != entity.Name
                 || currentEntity.Price != entity.Price
                 || currentEntity.LeftOnStock != entity.LeftOnStock
-                || currentEntity.Rating != entity.Rating;
+                || currentEntity.Rating != entity.Rating
+                || currentEntity.CoverImagePath != entity.CoverImagePath;
         }
     }
 }

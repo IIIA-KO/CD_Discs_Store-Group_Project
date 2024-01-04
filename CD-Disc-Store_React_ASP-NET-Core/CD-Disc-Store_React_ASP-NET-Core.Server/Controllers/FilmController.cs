@@ -15,68 +15,80 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             this._filmRepository = filmRepository;
         }
 
-        [HttpGet("Index")]
-        public async Task<ActionResult<IReadOnlyList<Film>>> Index()
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IReadOnlyList<Film>>> GetAll()
         {
             return Ok(await this._filmRepository.GetAllAsync());
         }
 
+        [HttpGet("GetFilm")]
+        public async Task<ActionResult<Film>> GetFilm(Guid? id)
+        {
+            if(id == null)
+            {
+                return NotFound();
+            }
+
+            var film = await this._filmRepository.GetByIdAsync(id);
+
+            if(film == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(film);
+        }
+
         [HttpPost("Create")]
-        public async Task<int> Create([Bind("Id,Name,Genre,Producer,MainRole,AgeLimit")] Film film)
+        public async Task<ActionResult<int>> Create([Bind("Id,Name,Genre,Producer,MainRole,AgeLimit")] Film film)
         {
             if(!ModelState.IsValid)
             {
-                return 0;
+                return BadRequest(ModelState);
             }
 
             film.Id = Guid.NewGuid();
 
-            return await this._filmRepository.AddAsync(film);
+            return Ok(await this._filmRepository.AddAsync(film));
         }
 
         [HttpPut("Edit")]
-        public async Task<int> Edit(Guid? id, [Bind("Id,Name,Genre,Producer,MainRole,AgeLimit")] Film film)
+        public async Task<ActionResult<int>> Edit(Guid? id, [Bind("Id,Name,Genre,Producer,MainRole,AgeLimit")] Film film)
         {
-            if (id == null)
+            if (id == null || film == null)
             {
-                return 0;
+                return BadRequest();
             }
 
             if (id != film.Id)
             {
-                return 0;
+                return BadRequest();
             }
 
             try
             {
-                await this._filmRepository.UpdateAsync(film);
+                return Ok(await this._filmRepository.UpdateAsync(film));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 if (!await this._filmRepository.ExistsAsync(film.Id))
                 {
-                    return 0;
+                    return NotFound();
                 }
                 else
                 {
-                    throw;
+                    return StatusCode(500, $"Internal Server Error: {ex.Message}");
                 }
             }
-
-            return 1;
         }
 
         [HttpDelete("Delete")]
-        public async Task<int> DeleteConfirmed(Guid id)
+        public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
         {
-            var client = await this._filmRepository.GetByIdAsync(id);
+            var film = await this._filmRepository.GetByIdAsync(id);
 
-            if (client != null)
-            {
-                return await this._filmRepository.DeleteAsync(client.Id);
-            }
-
-            return 0;
+            return film == null ? NotFound()
+                : Ok(await this._filmRepository.DeleteAsync(film.Id));
         }
     }
 }

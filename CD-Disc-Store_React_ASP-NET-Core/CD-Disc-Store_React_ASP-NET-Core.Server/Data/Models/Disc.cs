@@ -22,6 +22,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models
         [Required(ErrorMessage = "The \"Rating\" field is required")]
         public decimal Rating { get; set; } = default!;
 
-
+        [StringLength(100)]
+        public string CoverImagePath { get; set; } = default!;
     }
 }

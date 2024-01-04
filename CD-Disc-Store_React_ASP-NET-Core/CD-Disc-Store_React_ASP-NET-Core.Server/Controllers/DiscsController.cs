@@ -15,13 +15,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             this._discRepository = discRepository;
         }
 
-        [HttpGet("Index")]
-        public async Task<ActionResult<IReadOnlyList<Disc>>> Index()
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll()
         {
             return Ok(await this._discRepository.GetAllAsync());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GetDisc")]
         public async Task<ActionResult<Disc>> GetDisc(Guid? id)
         {
             if (id == null)
@@ -40,65 +40,55 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPost("Create")]
-        public async Task<int> Create([Bind("Id,Name,Price,LeftOnStock,Rating")] Disc disc)
+        public async Task<ActionResult<int>> Create([Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath")] Disc disc)
         {
             if (!ModelState.IsValid)
             {
-                return 0;
+                return BadRequest(ModelState);
             }
 
             disc.Id = Guid.NewGuid();
 
-            return await this._discRepository.AddAsync(disc);
+            return Ok(await this._discRepository.AddAsync(disc));
         }
 
         [HttpPut("Edit")]
-        public async Task<int> Edit(Guid? id, [Bind("Id,Name,Price,LeftOnStock,Rating")] Disc disc)
+        public async Task<ActionResult<int>> Edit(Guid? id, [Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath")] Disc disc)
         {
-            if (id == null)
+            if (id == null || disc == null)
             {
-                return 0;
+                return BadRequest();
             }
 
             if (id != disc.Id)
             {
-                return 0;
-            }
-            if (disc == null)
-            {
-                return 0;
+                return BadRequest();
             }
 
             try
             {
-                await this._discRepository.UpdateAsync(disc);
+                return Ok(await this._discRepository.UpdateAsync(disc));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 if (!await this._discRepository.ExistsAsync(disc.Id))
                 {
-                    return 0;
+                    return NotFound();
                 }
                 else
                 {
-                    throw;
+                    return StatusCode(500, $"Internal Server Error: {ex.Message}");
                 }
             }
-
-            return 1;
         }
 
         [HttpDelete("Delete")]
-        public async Task<int> DeleteConfirmed(Guid id)
+        public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
         {
             var disc = await this._discRepository.GetByIdAsync(id);
 
-            if (disc != null)
-            {
-                return await this._discRepository.DeleteAsync(disc.Id);
-            }
-
-            return 0;
+            return disc == null ? NotFound() 
+                : Ok(await this._discRepository.DeleteAsync(disc.Id));
         }
     }
 }

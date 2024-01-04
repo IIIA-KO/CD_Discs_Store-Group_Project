@@ -16,13 +16,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             this._musicRepository = musicRepository;
         }
 
-        [HttpGet("Index")]
-        public async Task<ActionResult<IReadOnlyList<Music>>> Index()
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IReadOnlyList<Music>>> GetAll()
         {
             return Ok(await this._musicRepository.GetAllAsync());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GetDisc")]
         public async Task<ActionResult<Music>> GetDisc(Guid? id)
         {
             if (id == null)
@@ -41,65 +41,55 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPost("Create")]
-        public async Task<int> Create([Bind("Id,Name,Genre,Artist,Language")] Music music)
+        public async Task<ActionResult<int>> Create([Bind("Id,Name,Genre,Artist,Language")] Music music)
         {
             if (!ModelState.IsValid)
             {
-                return 0;
+                return BadRequest(ModelState);
             }
 
             music.Id = Guid.NewGuid();
 
-            return await this._musicRepository.AddAsync(music);
+            return Ok(await this._musicRepository.AddAsync(music));
         }
 
         [HttpPut("Edit")]
-        public async Task<int> Edit(Guid? id, [Bind("Id,Name,Genre,Artist,Language")] Music music)
+        public async Task<ActionResult<int>> Edit(Guid? id, [Bind("Id,Name,Genre,Artist,Language")] Music music)
         {
-            if (id == null)
+            if (id == null || music == null)
             {
-                return 0;
+                return BadRequest();
             }
 
             if (id != music.Id)
             {
-                return 0;
-            }
-            if (music == null)
-            {
-                return 0;
+                return BadRequest();
             }
 
             try
             {
-                await this._musicRepository.UpdateAsync(music);
+                return Ok(await this._musicRepository.UpdateAsync(music));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 if (!await this._musicRepository.ExistsAsync(music.Id))
                 {
-                    return 0;
+                    return NotFound();
                 }
                 else
                 {
-                    throw;
+                    return StatusCode(500, $"Internal Server Error: {ex.Message}");
                 }
             }
-
-            return 1;
         }
 
         [HttpDelete("Delete")]
-        public async Task<int> DeleteConfirmed(Guid id)
+        public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
         {
             var music = await this._musicRepository.GetByIdAsync(id);
 
-            if (music != null)
-            {
-                return await this._musicRepository.DeleteAsync(music.Id);
-            }
-
-            return 0;
+            return music == null ? NotFound()
+                : Ok(await this._musicRepository.DeleteAsync(music.Id));
         }
     }
 }

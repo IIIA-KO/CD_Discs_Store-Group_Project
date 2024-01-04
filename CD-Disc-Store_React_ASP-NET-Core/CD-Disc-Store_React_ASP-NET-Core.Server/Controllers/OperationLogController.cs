@@ -15,13 +15,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 			this._operationLogRepository = operationLogRepository;
         }
 
-		[HttpGet("Index")]
-        public async Task<ActionResult<IReadOnlyList<OperationLog>>> Index()
+		[HttpGet("GetAll")]
+        public async Task<ActionResult<IReadOnlyList<OperationLog>>> GetAll()
 		{
 			return Ok(await this._operationLogRepository.GetAllAsync());
 		}
 
-		[HttpGet("{id}")]
+		[HttpGet("GetOperationLog")]
 		public async Task<ActionResult<OperationLog>> GetOperationLog(Guid? id)
 		{
 			if (id == null)
@@ -29,14 +29,14 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 				return NotFound();
 			}
 
-			var operation = await this._operationLogRepository.GetByIdAsync(id);
+			var operationLog = await this._operationLogRepository.GetByIdAsync(id);
 
-			if (operation == null)
+			if (operationLog == null)
 			{
 				return NotFound();
 			}
 
-			return Ok(operation);
+			return Ok(operationLog);
 		}
 
 		[HttpGet("Client/{id}")]
@@ -47,14 +47,14 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 				return NotFound();
 			}
 
-			var operation = await this._operationLogRepository.GetByClientIdAsync(id);
+			var operationLog = await this._operationLogRepository.GetByClientIdAsync(id);
 
-			if (operation == null)
+			if (operationLog == null)
 			{
 				return NotFound();
 			}
 
-			return Ok(operation);
+			return Ok(operationLog);
 		}
 
 		[HttpGet("Disc/{id}")]
@@ -65,22 +65,22 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 				return NotFound();
 			}
 
-			var operation = await this._operationLogRepository.GetByDiscIdAsync(id);
+			var operationLog = await this._operationLogRepository.GetByDiscIdAsync(id);
 
-			if (operation == null)
+			if (operationLog == null)
 			{
 				return NotFound();
 			}
 
-			return Ok(operation);
+			return Ok(operationLog);
 		}
 
 		[HttpPost("Create")]
-		public async Task<int> Create([Bind("Id,OperationDateTimeStart,OperationDateTimeEnd,ClientId,DiscId,OperationType,Quantity")] OperationLog operationLog)
+		public async Task<ActionResult<int>> Create([Bind("Id,OperationDateTimeStart,OperationDateTimeEnd,ClientId,DiscId,OperationType,Quantity")] OperationLog operationLog)
 		{
 			if (!ModelState.IsValid)
 			{
-				return 0;
+				return BadRequest(ModelState);
 			}
 
 			operationLog.Id = Guid.NewGuid();
@@ -89,48 +89,42 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 		}
 
 		[HttpPut("Edit")]
-		public async Task<int> Edit(Guid? id, [Bind("Id,OperationDateTimeStart,OperationDateTimeEnd,ClientId,DiscId,OperationType,Quantity")] OperationLog operationLog)
+		public async Task<ActionResult<int>> Edit(Guid? id, [Bind("Id,OperationDateTimeStart,OperationDateTimeEnd,ClientId,DiscId,OperationType,Quantity")] OperationLog operationLog)
 		{
-			if (id == null)
+			if (id == null || operationLog == null)
 			{
-				return 0;
+				return BadRequest(ModelState);
 			}
 
 			if (id != operationLog.Id)
 			{
-				return 0;
+				return BadRequest();
 			}
 
 			try
 			{
-				await this._operationLogRepository.UpdateAsync(operationLog);
+				return Ok(await this._operationLogRepository.UpdateAsync(operationLog));
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
 				if (!await this._operationLogRepository.ExistsAsync(operationLog.Id))
 				{
-					return 0;
-				}
-				else
-				{
-					throw;
-				}
-			}
-
-			return 1;
+                    return NotFound();
+                }
+                else
+                {
+                    return StatusCode(500, $"Internal Server Error: {ex.Message}");
+                }
+            }
 		}
 
 		[HttpDelete("Delete")]
-		public async Task<int> DeleteConfirmed(Guid id)
+		public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
 		{
-			var client = await this._operationLogRepository.GetByIdAsync(id);
+			var operationLog = await this._operationLogRepository.GetByIdAsync(id);
 
-			if (client != null)
-			{
-				return await this._operationLogRepository.DeleteAsync(client.Id);
-			}
-
-			return 0;
+			return operationLog == null ? NotFound()
+				: Ok(await this._operationLogRepository.DeleteAsync(operationLog.Id));
 		}
 	}
 }
