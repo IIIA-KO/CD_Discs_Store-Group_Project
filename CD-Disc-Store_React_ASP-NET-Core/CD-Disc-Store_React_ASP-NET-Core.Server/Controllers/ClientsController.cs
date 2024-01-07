@@ -18,8 +18,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             this._clientRepository = clientRepository;
         }
 
-        [HttpGet("Index")]
-        public async Task<ActionResult<IReadOnlyList<Client>>> Index(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IReadOnlyList<Client>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
             var model = new IndexViewModel<Client>
             {
@@ -39,7 +39,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                         model.PageSize));
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GetClient")]
         public async Task<ActionResult<Client>> GetClient(Guid? id)
         {
             if (id == null)
@@ -58,48 +58,46 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPost("Create")]
-        public async Task<int> Create([Bind("Id,FirstName,LastName,Address,City,ContactPhone,ContactMail,BirthDay,MarriedStatus,Sex,HasChild")] Client client)
+        public async Task<ActionResult<int>> Create([Bind("Id,FirstName,LastName,Address,City,ContactPhone,ContactMail,BirthDay,MarriedStatus,Sex,HasChild")] Client client)
         {
             if (!ModelState.IsValid && !ValidateContactDetails(client))
             {
-                return 0;
+                return BadRequest(ModelState);
             }
 
             client.Id = Guid.NewGuid();
 
-            return await this._clientRepository.AddAsync(client);
+            return Ok(await this._clientRepository.AddAsync(client));
         }
 
         [HttpPut("Edit")]
-        public async Task<int> Edit(Guid? id, [Bind("Id,FirstName,LastName,Address,City,ContactPhone,ContactMail,BirthDay,MarriedStatus,Sex,HasChild")] Client client)
+        public async Task<ActionResult<int>> Edit(Guid? id, [Bind("Id,FirstName,LastName,Address,City,ContactPhone,ContactMail,BirthDay,MarriedStatus,Sex,HasChild")] Client client)
         {
-            if (id == null)
+            if (id == null || client == null)
             {
-                return 0;
+                return BadRequest();
             }
 
             if (id != client.Id)
             {
-                return 0;
+                return BadRequest();
             }
 
             try
             {
-                await this._clientRepository.UpdateAsync(client);
+                return Ok(await this._clientRepository.UpdateAsync(client));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 if (!await this._clientRepository.ExistsAsync(client.Id))
                 {
-                    return 0;
+                    return NotFound();
                 }
                 else
                 {
-                    throw;
+                    return StatusCode(500, $"Internal Server Error: {ex.Message}");
                 }
             }
-
-            return 1;
         }
 
         private bool ValidateContactDetails(Client client)
@@ -120,16 +118,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpDelete("Delete")]
-        public async Task<int> DeleteConfirmed(Guid id)
+        public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
         {
             var client = await this._clientRepository.GetByIdAsync(id);
 
-            if (client != null)
-            {
-                return await this._clientRepository.DeleteAsync(client.Id);
-            }
 
-            return 0;
+            return client == null ? NotFound() 
+                : Ok(await this._clientRepository.DeleteAsync(client.Id));
         }
     }
 }
