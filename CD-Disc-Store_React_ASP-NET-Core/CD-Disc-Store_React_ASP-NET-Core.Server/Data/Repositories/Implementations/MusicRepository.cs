@@ -124,16 +124,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
                     conditions.Add($"{fieldName} LIKE @searchText");
                     param.Add("@searchText", $"%{searchText}%");
                 }
-                else if (propertyType == typeof(DateTime) && DateTime.TryParse(searchText, out var parsedDate))
-                {
-                    conditions.Add($"{fieldName} = @searchDate");
-                    param.Add("@searchDate", parsedDate);
-                }
-                else if (propertyType == typeof(bool) && bool.TryParse(searchText, out var parsedBool))
-                {
-                    conditions.Add($"{fieldName} = @searchBool");
-                    param.Add("@searchBool", parsedBool);
-                }
             }
 
             return string.Join(" OR ", conditions);
