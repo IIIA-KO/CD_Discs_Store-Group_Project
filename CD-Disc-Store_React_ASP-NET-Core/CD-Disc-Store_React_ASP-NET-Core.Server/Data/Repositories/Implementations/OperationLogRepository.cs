@@ -1,260 +1,154 @@
 ﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
 using System.Data;
 using static Dapper.SqlMapper;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-	public class OperationLogRepository : IOperationLogRepository
-	{
-		private readonly IDapperContext _context;
+    public class OperationLogRepository : IOperationLogRepository
+    {
+        private readonly IDapperContext _context;
+        private readonly IOrderRepository _orderRepository;
 
-		private const string OPERATION_NOT_FOUND_BY_ID_ERROR = "The operation with specified Id was not found";
+        private const string OPERATION_LOG_NOT_FOUND_BY_ID_ERROR = "The operation with specified Id was not found";
+        private const string ORDER_DOES_NOT_EXIST = "The Order with specified Id does not exist. Cannot Add Operation Log";
+        private const string OPERATION_TYPE_DOES_NOT_EXIST = "The Operation Type with specified Id does not exist. Cannot Add Operation Log";
 
-        public OperationLogRepository(IDapperContext context)
+        public OperationLogRepository(IDapperContext context, IOrderRepository orderRepository)
         {
-			this._context = context;
+            this._context = context;
+            this._orderRepository = orderRepository;
+        }
+        public async Task<OperationLog> GetByIdAsync(Guid? id)
+        {
+            if (id is null)
+            {
+                throw new ArgumentNullException(OPERATION_LOG_NOT_FOUND_BY_ID_ERROR);
+            }
+
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            var operationLog = await dbConnection.QueryFirstOrDefaultAsync<OperationLog>("SELECT * FROM OperationLog WHERE Id = @Id", new { Id = id });
+            return operationLog ?? throw new NotFoundException(OPERATION_LOG_NOT_FOUND_BY_ID_ERROR);
         }
 
-		public async Task<int> AddAsync(OperationLog operationLog)
-		{
-			using IDbConnection dbConnection = this._context.CreateConnection();
-			dbConnection.Open();
+        public async Task<IReadOnlyList<OperationLog>> GetAllAsync()
+        {
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            var operationLogs = await dbConnection.QueryAsync<OperationLog>("SELECT * FROM OperationLog");
+            return (IReadOnlyList<OperationLog>)operationLogs ?? new List<OperationLog>();
+        }
 
-			using IDbTransaction transaction = dbConnection.BeginTransaction();
+        public async Task<IReadOnlyList<OperationLog>> GetByClientIdAsync(Guid? id)
+        {
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            var operationLogs = await dbConnection.QueryAsync<OperationLog>("SELECT ol.* FROM OperationLog AS ol INNER JOIN [Order] as o ON ol.IdOrder = o.Id WHERE o.IdClient = @IdClient", new { IdClient = id });
+            return (IReadOnlyList<OperationLog>)operationLogs ?? new List<OperationLog>();
+        }
 
-			try
-			{
-				var result = await dbConnection.QueryAsync<Guid>(
-					"INSERT INTO [Order] (OrderDateTime, IdClient) OUTPUT INSERTED.Id VALUES (@OperationDateTimeStart, @ClientId)",
-					new 
-					{ 
-						OperationDateTimeStart = operationLog.OperationDateTimeStart, 
-						ClientId = operationLog.ClientId 
-					},
-					transaction
-				);
+        public async Task<IReadOnlyList<OperationLog>> GetByDiscIdAsync(Guid? id)
+        {
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            var operationLogs = await dbConnection.QueryAsync<OperationLog>(
+               $@"SELECT ol.*
+               FROM OperationLog AS ol
+               JOIN [Order] ON ol.IdOrder = [Order].Id
+               JOIN OperationType ON ol.OperationType = OperationType.Id
+               JOIN OrderItem ON [Order].Id = OrderItem.IdOrder
+               JOIN Disc ON OrderItem.IdDisc = Disc.Id
+               WHERE Disc.Id = @IdDisc",
+                new { IdDisc = id });
+            return (IReadOnlyList<OperationLog>)operationLogs ?? new List<OperationLog>();
+        }
 
-				Guid orderId = result.Single();
+        public async Task<int> AddAsync(OperationLog entity)
+        {
+            if (!await this._orderRepository.ExistsAsync(entity.IdOrder))
+            {
+                throw new InvalidOperationException(ORDER_DOES_NOT_EXIST);
+            }
 
-				await dbConnection.ExecuteAsync(
-					"INSERT INTO OrderItem (IdOrder, IdDisc, Quantity) VALUES (@IdOrder, @IdDisc, @Quantity)",
-					new 
-					{ 
-						IdOrder = orderId, 
-						IdDisc = operationLog.DiscId,
-						Quantity = operationLog.Quantity 
-					},
-					transaction
-				);
+            if (!await OperationTypeExistsAsync(entity.OperationType))
+            {
+                throw new InvalidOperationException(OPERATION_TYPE_DOES_NOT_EXIST);
+            }
 
-				var operationTypeId = await dbConnection.ExecuteScalarAsync<Guid>(
-					"SELECT Id FROM OperationType WHERE TypeName = @TypeName",
-					new { TypeName = operationLog.OperationType },
-					transaction
-				);
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            dbConnection.Open();
 
-				if (operationTypeId == Guid.Empty)
-				{
-					operationTypeId = await dbConnection.ExecuteScalarAsync<Guid>(
-						"INSERT INTO OperationType(TypeName) VALUES (@OperationType) SELECT CAST(SCOPE_IDENTITY() as uniqueidentifier)",
-						new { OperationType = operationLog.OperationType }, 
-						transaction
-					);
-				}
+            using IDbTransaction transaction = dbConnection.BeginTransaction();
 
-				await dbConnection.ExecuteAsync(
-					"INSERT INTO OperationLog (OperationType, OperationDateTimeStart, OperationDateTimeEnd, IdOrder) " +
-					"VALUES (@OperationType, @OperationDateTimeStart, @OperationDateTimeEnd, @IdOrder)",
-					new
-					{ 
-						OperationType = operationTypeId, 
-						OperationDateTimeStart = operationLog.OperationDateTimeStart,
-						OperationDateTimeEnd = operationLog.OperationDateTimeEnd, 
-						IdOrder = orderId 
-					},
-					transaction
-				);
+            try
+            {
+                var result = await dbConnection.ExecuteAsync(
+                    "INSERT INTO OperationLog (Id, OperationType, OperationDateTimeStart, OperationDateTimeEnd, IdOrder)" +
+                    "VALUES (@Id, @OperationType, @OperationDateTimeStart, @OperationDateTimeEnd, @IdOrder)",
+                    entity, transaction);
 
-				transaction.Commit();
-				return 1;
-			}
-			catch (Exception)
-			{
-				transaction.Rollback();
-				throw;
-			}
-		}
+                transaction.Commit();
+                return result;
+            }
+            catch (Exception)
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
 
+        private async Task<bool> OperationTypeExistsAsync(Guid id)
+        {
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            return await dbConnection.ExecuteScalarAsync<bool>("SELECT COUNT(1) FROM OperationType WHERE Id = @Id", new { Id = id });
+        }
 
-		public async Task<int> DeleteAsync(Guid id)
-		{
-			using IDbConnection dbConnection = this._context.CreateConnection();
-			return await dbConnection.ExecuteAsync($"DELETE FROM OperationLog WHERE Id = @Id", new { Id = id });
-		}
+        public async Task<int> UpdateAsync(OperationLog entity)
+        {
+            OperationLog currentOperationLog;
+            try
+            {
+                currentOperationLog = await this.GetByIdAsync(entity.Id);
+            }
+            catch (NullReferenceException)
+            {
+                throw;
+            }
 
-		public async Task<bool> ExistsAsync(Guid id)
-		{
-			using IDbConnection dbConnection = this._context.CreateConnection();
-			return await dbConnection.ExecuteScalarAsync<bool>("SELECT COUNT(1) FROM OperationLog WHERE Id = @Id", new { Id = id });
-		}
+            if (currentOperationLog != null && !IsEntityChanged(currentOperationLog, entity))
+            {
+                return 0;
+            }
 
-		public async Task<IReadOnlyList<OperationLog>> GetAllAsync()
-		{
-			using IDbConnection dbConnection = this._context.CreateConnection();
+            using IDbConnection dbConnection = this._context.CreateConnection();
 
-			var allIds = await dbConnection.QueryAsync<Guid>("SELECT Id FROM OperationLog");
+            return await dbConnection.ExecuteAsync("UPDATE OperationLog SET OperationType = @OperationType, OperationDateTimeStart = @OperationDateTimeStart, OperationDateTimeEnd = @OperationDateTimeEnd, IdOrder = @IdOrder", entity);
+        }
 
-			var result = new List<OperationLog>();
-			foreach (var id in allIds)
-			{
-				var operationLog = await GetByIdAsync(id);
-				if (operationLog != null)
-				{
-					result.Add(operationLog);
-				}
-			}
+        public bool IsEntityChanged(OperationLog currentEntity, OperationLog entity)
+        {
+            return currentEntity.OperationDateTimeStart != entity.OperationDateTimeStart
+                || currentEntity.OperationDateTimeEnd != entity.OperationDateTimeEnd
+                || currentEntity.OperationType != entity.OperationType
+                || currentEntity.IdOrder != entity.IdOrder;
+        }
 
-			return result;
-		}
+        public async Task<int> DeleteAsync(Guid id)
+        {
+            using IDbConnection dbConnection = this._context.CreateConnection();
 
-		public async Task<OperationLog> GetByIdAsync(Guid? id)
-		{
-			var result = await GetClientsByAsync(id, $"WHERE OperationLog.Id = @Id");
-			return result.FirstOrDefault();
-		}
+            if (!await ExistsAsync(id))
+            {
+                return 0;
+            }
 
+            return await dbConnection.ExecuteAsync($"DELETE FROM OperationLog WHERE Id = @Id", new { Id = id });
+        }
 
-		public async Task<IReadOnlyList<OperationLog>> GetByClientIdAsync(Guid? id)
-		{
-			return await GetClientsByAsync(id, $"WHERE Client.Id = @Id");
-		}
-
-		public async Task<IReadOnlyList<OperationLog>> GetByDiscIdAsync(Guid? id)
-		{
-			return await GetClientsByAsync(id, $"WHERE Disc.Id = @Id");
-		}
-
-		private async Task<IReadOnlyList<OperationLog>> GetClientsByAsync(Guid? id, string condition = "")
-		{
-			using IDbConnection dbConnection = this._context.CreateConnection();
-
-			if (id is null)
-			{
-				throw new NullReferenceException(OPERATION_NOT_FOUND_BY_ID_ERROR);
-			}
-
-			var operations = await dbConnection.QueryAsync<OperationLog>(
-				$"SELECT OperationLog.Id, OperationLog.OperationDateTimeStart, OperationLog.OperationDateTimeEnd, " +
-				$"Client.Id AS ClientId, Disc.Id AS DiscId, OperationType.TypeName AS OperationType, OrderItem.Quantity " +
-				$"FROM OperationLog " +
-				$"JOIN [Order] ON OperationLog.IdOrder = [Order].Id " +
-				$"JOIN OrderItem ON [Order].Id = OrderItem.IdOrder " +
-				$"JOIN Client ON [Order].IdClient = Client.Id " +
-				$"JOIN Disc ON OrderItem.IdDisc = Disc.Id " +
-				$"JOIN OperationType ON OperationLog.OperationType = OperationType.Id " +
-				condition, new { Id = id });
-
-			return operations?.ToList() ?? new List<OperationLog>();
-		}
-
-
-		public bool IsEntityChanged(OperationLog currentEntity, OperationLog entity)
-		{
-			return currentEntity.Id == entity.Id
-				|| currentEntity.OperationDateTimeStart == entity.OperationDateTimeStart
-				|| currentEntity.OperationDateTimeEnd == entity.OperationDateTimeEnd
-				|| currentEntity.OperationType == entity.OperationType
-				|| currentEntity.ClientId.CompareTo(entity.ClientId) == 0
-				|| currentEntity.DiscId.CompareTo(entity.DiscId) == 0
-				|| currentEntity.Quantity == entity.Quantity;
-		}
-
-		public async Task<int> UpdateAsync(OperationLog operationLog)
-		{
-			OperationLog currentOperation;
-			try
-			{
-				currentOperation = await this.GetByIdAsync(operationLog.Id);
-			}
-			catch (NullReferenceException)
-			{
-				throw;
-			}
-
-			if (currentOperation != null && !IsEntityChanged(currentOperation, operationLog))
-			{
-				return 0;
-			}
-
-
-			using IDbConnection dbConnection = this._context.CreateConnection();
-			dbConnection.Open();
-
-			using IDbTransaction transaction = dbConnection.BeginTransaction();
-
-			try
-			{
-				var operationTypeId = await dbConnection.ExecuteScalarAsync<Guid>(
-					"SELECT Id FROM OperationType WHERE TypeName = @TypeName",
-					new { TypeName = operationLog.OperationType },
-					transaction
-				);
-
-				var orderId = await dbConnection.ExecuteScalarAsync<Guid>(
-					"SELECT IdOrder FROM OperationLog WHERE Id = @Id",
-					new { Id = operationLog.Id },
-					transaction
-				);
-
-				await dbConnection.ExecuteAsync(
-					"UPDATE [Order] SET OrderDateTime = @OrderDateTime, IdClient = @ClientId WHERE Id = @Id",
-					new 
-					{ 
-						OrderDateTime = operationLog.OperationDateTimeStart, 
-						ClientId = operationLog.ClientId,
-						Id = orderId
-					},
-					transaction
-				);
-
-				await dbConnection.ExecuteAsync(
-					"UPDATE OrderItem SET IdDisc = @IdDisc, Quantity = @Quantity WHERE IdOrder = @IdOrder",
-					new 
-					{ 
-						IdOrder = orderId, 
-						IdDisc = operationLog.DiscId,
-						Quantity = operationLog.Quantity 
-					},
-					transaction
-				);
-
-				await dbConnection.ExecuteAsync(
-					"UPDATE OperationLog SET OperationType = @OperationTypeId, OperationDateTimeStart = @OperationDateTimeStart, " +
-					"OperationDateTimeEnd = @OperationDateTimeEnd WHERE Id = @Id",
-					new
-					{
-						OperationTypeId = operationTypeId,
-						OperationDateTimeStart = operationLog.OperationDateTimeStart,
-						OperationDateTimeEnd = operationLog.OperationDateTimeEnd,
-						Id = operationLog.Id
-					},
-					transaction
-				);
-
-				transaction.Commit();
-				return 1;
-			}
-			catch (Exception)
-			{
-				transaction.Rollback();
-				throw;
-			}
-
-		}
-
-	}
-
+        public async Task<bool> ExistsAsync(Guid id)
+        {
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            return await dbConnection.ExecuteScalarAsync<bool>("SELECT COUNT(1) FROM OperationLog WHERE Id = @Id", new { Id = id });
+        }
+    }
 }

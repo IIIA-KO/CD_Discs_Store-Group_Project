@@ -1,6 +1,7 @@
 ﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
 using System.Data;
 
@@ -19,15 +20,14 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<Music> GetByIdAsync(Guid? id)
         {
-            using IDbConnection dbConnection = this._context.CreateConnection();
-
             if (id is null)
             {
-                throw new NullReferenceException(MUSIC_NOT_FOUND_BY_ID_ERROR);
+                throw new ArgumentNullException(MUSIC_NOT_FOUND_BY_ID_ERROR);
             }
 
-            return await dbConnection.QueryFirstOrDefaultAsync<Music>("SELECT * FROM Music WHERE Id = @Id", new { Id = id })
-                ?? throw new NullReferenceException(MUSIC_NOT_FOUND_BY_ID_ERROR);
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            var music = await dbConnection.QueryFirstOrDefaultAsync<Music>("SELECT * FROM Music WHERE Id = @Id", new { Id = id });
+            return music ?? throw new NotFoundException(MUSIC_NOT_FOUND_BY_ID_ERROR);
         }
 
         public async Task<IReadOnlyList<Music>> GetAllAsync()
@@ -45,6 +45,24 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> UpdateAsync(Music entity)
         {
+            Music currentMusic;
+            try
+            {
+                currentMusic = await this.GetByIdAsync(entity.Id);
+            }
+            catch (Exception ex)
+                when (ex is ArgumentNullException
+                    || ex is NullReferenceException
+                    || ex is NotFoundException)
+            {
+                throw;
+            }
+
+            if (currentMusic != null && !IsEntityChanged(currentMusic, entity))
+            {
+                return 0;
+            }
+
             using IDbConnection dbConnection = this._context.CreateConnection();
             return await dbConnection.ExecuteAsync("UPDATE Music SET Name = @Name, Genre = @Genre, Artist = @Artist, Language = @Language WHERE Id = @Id", entity);
         }

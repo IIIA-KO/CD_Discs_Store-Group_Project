@@ -1,4 +1,6 @@
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Implementations;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server
@@ -14,6 +16,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
             builder.Services.AddControllers();
 
             builder.Services.RegisterIdentity(builder.Configuration);
+
+            builder.Services.AddSingleton<ICloudStorage, GoogleCloudStorage>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();

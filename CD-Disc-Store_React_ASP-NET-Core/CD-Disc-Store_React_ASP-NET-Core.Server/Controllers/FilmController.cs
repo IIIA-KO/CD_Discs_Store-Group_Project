@@ -1,5 +1,6 @@
 ﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
@@ -24,32 +25,41 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpGet("GetFilm")]
         public async Task<ActionResult<Film>> GetFilm(Guid? id)
         {
-            if(id == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var film = await this._filmRepository.GetByIdAsync(id);
-
-            if(film == null)
+            try
+            {
+                var film = await this._filmRepository.GetByIdAsync(id);
+                return Ok(film);
+            }
+            catch (NotFoundException)
             {
                 return NotFound();
             }
 
-            return Ok(film);
         }
 
         [HttpPost("Create")]
         public async Task<ActionResult<int>> Create([Bind("Id,Name,Genre,Producer,MainRole,AgeLimit")] Film film)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            film.Id = Guid.NewGuid();
+            try
+            {
+                film.Id = Guid.NewGuid();
 
-            return Ok(await this._filmRepository.AddAsync(film));
+                return Ok(await this._filmRepository.AddAsync(film));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
 
         [HttpPut("Edit")]

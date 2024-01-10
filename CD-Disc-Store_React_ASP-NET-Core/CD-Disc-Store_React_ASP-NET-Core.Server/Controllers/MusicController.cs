@@ -1,5 +1,6 @@
 ﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -30,14 +31,15 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 return NotFound();
             }
 
-            var music = await this._musicRepository.GetByIdAsync(id);
-
-            if (music == null)
+            try
+            {
+                var music = await this._musicRepository.GetByIdAsync(id);
+                return Ok(music);
+            }
+            catch (NotFoundException)
             {
                 return NotFound();
             }
-
-            return Ok(music);
         }
 
         [HttpPost("Create")]
@@ -48,9 +50,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 return BadRequest(ModelState);
             }
 
-            music.Id = Guid.NewGuid();
+            try
+            {
+                music.Id = Guid.NewGuid();
 
-            return Ok(await this._musicRepository.AddAsync(music));
+                return Ok(await this._musicRepository.AddAsync(music));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
 
         [HttpPut("Edit")]
