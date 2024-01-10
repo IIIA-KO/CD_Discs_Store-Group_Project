@@ -2,6 +2,7 @@
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
@@ -17,10 +18,24 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             this._musicRepository = musicRepository;
         }
 
-        [HttpGet("GetAll")]
-        public async Task<ActionResult<IReadOnlyList<Music>>> GetAll()
+        public async Task<ActionResult<IReadOnlyList<Music>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            return Ok(await this._musicRepository.GetAllAsync());
+            var model = new IndexViewModel<Music>
+            {
+                SearchText = searchText,
+                SortOrder = sortOrder,
+                SortFieldName = sortField ?? "Id",
+                Skip = skip,
+                CountItems = await this._musicRepository.CountProcessedDataAsync(searchText),
+                PageSize = 20
+            };
+
+            return Ok(model.Items = await this._musicRepository.GetProcessedAsync(
+                        model.SearchText,
+                        model.SortOrder,
+                        model.SortFieldName,
+                        model.Skip,
+                        model.PageSize));
         }
 
         [HttpGet("GetDisc")]

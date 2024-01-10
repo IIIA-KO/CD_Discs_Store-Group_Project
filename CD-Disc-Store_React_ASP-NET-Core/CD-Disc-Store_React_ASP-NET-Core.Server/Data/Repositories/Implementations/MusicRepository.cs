@@ -3,6 +3,7 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
+using Microsoft.Data.SqlClient;
 using System.Data;
 
 
@@ -91,5 +92,60 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             using IDbConnection dbConnection = this._context.CreateConnection();
             return await dbConnection.ExecuteScalarAsync<bool>("SELECT COUNT(1) FROM Music WHERE Id = @Id", new { Id = id });
         }
+
+        public async Task<IReadOnlyList<Music>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
+        {
+            if (string.IsNullOrEmpty(sortField) || !IndexViewModel<Music>.AllFieldNames.Contains(sortField))
+            {
+                return await GetAllAsync();
+            }
+
+            string sortOrderString = sortOrder == SortOrder.Descending ? "DESC" : "ASC";
+
+            var param = new DynamicParameters();
+            string conditions = GetSearchConditions(searchText, param);
+
+            string sqlQuery = $"SELECT * FROM Music WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+
+            using var dbConnection = _context.CreateConnection();
+            var musics = await dbConnection.QueryAsync<Music>(sqlQuery, param);
+
+            return musics?.ToList() ?? new List<Music>();
+        }
+
+        public async Task<int> CountProcessedDataAsync(string? searchText)
+        {
+            using IDbConnection dbConnection = _context.CreateConnection();
+
+            var param = new DynamicParameters();
+            string conditions = GetSearchConditions(searchText, param);
+
+            string countQuery = $"SELECT COUNT(*) FROM Music WHERE ({conditions})";
+            return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);
+        }
+
+        private string GetSearchConditions(string? searchText, DynamicParameters param)
+        {
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                return "1=1";
+            }
+
+            var conditions = new List<string>();
+
+            foreach (var fieldName in IndexViewModel<Music>.AllFieldNames)
+            {
+                var propertyType = typeof(Music).GetProperty(fieldName)?.PropertyType;
+
+                if (propertyType == typeof(string))
+                {
+                    conditions.Add($"{fieldName} LIKE @searchText");
+                    param.Add("@searchText", $"%{searchText}%");
+                }
+            }
+
+            return string.Join(" OR ", conditions);
+        }
     }
 }
+
