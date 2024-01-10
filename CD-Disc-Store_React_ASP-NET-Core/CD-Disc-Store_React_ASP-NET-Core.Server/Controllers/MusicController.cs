@@ -18,6 +18,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             this._musicRepository = musicRepository;
         }
 
+        [HttpGet("GetAll")]
         public async Task<ActionResult<IReadOnlyList<Music>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
             var model = new IndexViewModel<Music>
