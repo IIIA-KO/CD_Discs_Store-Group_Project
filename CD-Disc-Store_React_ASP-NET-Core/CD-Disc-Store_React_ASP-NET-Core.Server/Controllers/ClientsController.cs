@@ -71,7 +71,15 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             {
                 client.Id = Guid.NewGuid();
 
-                return Ok(await this._clientRepository.AddAsync(client));
+                var result = await this._clientRepository.AddAsync(client);
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Client created successfully", ClientId = client.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
+                }
             }
             catch (Exception ex)
             {
@@ -94,7 +102,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
             try
             {
-                return Ok(await this._clientRepository.UpdateAsync(client));
+                var result = await this._clientRepository.UpdateAsync(client);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Client updated successfully", ClientId = client.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
+                }
             }
             catch (Exception ex)
             {
@@ -129,11 +146,29 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpDelete("Delete")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
         {
-            var client = await this._clientRepository.GetByIdAsync(id);
+            try
+            {
+                var client = await this._clientRepository.GetByIdAsync(id);
+                if (client == null)
+                {
+                    return NotFound();
+                }
 
+                var result = await this._clientRepository.DeleteAsync(client.Id);
 
-            return client == null ? NotFound()
-                : Ok(await this._clientRepository.DeleteAsync(client.Id));
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Client deleted successfully", MusicId = id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
     }
 }

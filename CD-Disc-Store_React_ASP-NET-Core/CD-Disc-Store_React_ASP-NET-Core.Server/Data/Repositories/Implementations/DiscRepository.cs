@@ -3,6 +3,7 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
+using Microsoft.Data.SqlClient;
 using System.Data;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
@@ -92,6 +93,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
                 || currentEntity.Rating != entity.Rating
                 || currentEntity.CoverImagePath != entity.CoverImagePath
                 || currentEntity.ImageStorageName != entity.ImageStorageName;
+        }
+
+        public Task<IReadOnlyList<Disc>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> CountProcessedDataAsync(string? searchText)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -39,7 +39,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                         model.PageSize));
         }
 
-        [HttpGet("GetDisc")]
+        [HttpGet("GetMusic")]
         public async Task<ActionResult<Music>> GetDisc(Guid? id)
         {
             if (id == null)
@@ -70,7 +70,15 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             {
                 music.Id = Guid.NewGuid();
 
-                return Ok(await this._musicRepository.AddAsync(music));
+                var result = await this._musicRepository.AddAsync(music);
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Music created successfully", MusicId = music.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
+                }
             }
             catch (Exception ex)
             {
@@ -93,7 +101,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
             try
             {
-                return Ok(await this._musicRepository.UpdateAsync(music));
+                var result = await this._musicRepository.UpdateAsync(music);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Music updated successfully", MusicId = music.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
+                }
             }
             catch (Exception ex)
             {
@@ -111,10 +128,29 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpDelete("Delete")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
         {
-            var music = await this._musicRepository.GetByIdAsync(id);
+            try
+            {
+                var music = await this._musicRepository.GetByIdAsync(id);
+                if (music == null)
+                {
+                    return NotFound();
+                }
 
-            return music == null ? NotFound()
-                : Ok(await this._musicRepository.DeleteAsync(music.Id));
+                var result = await this._musicRepository.DeleteAsync(music.Id);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Music deleted successfully", MusicId = id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
     }
 }

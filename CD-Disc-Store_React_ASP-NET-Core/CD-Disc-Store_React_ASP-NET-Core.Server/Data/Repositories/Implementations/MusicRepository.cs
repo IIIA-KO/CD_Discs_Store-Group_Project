@@ -9,7 +9,7 @@ using System.Data;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class MusicRepository : IMusicRepository 
+    public class MusicRepository : IMusicRepository
     {
         private readonly IDapperContext _context;
         private const string MUSIC_NOT_FOUND_BY_ID_ERROR = "The music with specified Id was not found";
@@ -23,7 +23,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         {
             if (id is null)
             {
-                throw new ArgumentNullException(MUSIC_NOT_FOUND_BY_ID_ERROR);
+                throw new ArgumentNullException(nameof(id), MUSIC_NOT_FOUND_BY_ID_ERROR);
             }
 
             using IDbConnection dbConnection = this._context.CreateConnection();
@@ -41,7 +41,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         public async Task<int> AddAsync(Music entity)
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("INSERT INTO Music ([Name], Genre, Artist, [Language]) VALUES (@Name, @Genre, @Artist, @Language)", entity);
+            return await dbConnection.ExecuteAsync("INSERT INTO Music (Id, [Name], Genre, Artist, [Language]) VALUES (@Id, @Name, @Genre, @Artist, @Language)", entity);
         }
 
         public async Task<int> UpdateAsync(Music entity)
@@ -107,7 +107,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
             string sqlQuery = $"SELECT * FROM Music WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
 
-            using var dbConnection = _context.CreateConnection();
+            using IDbConnection dbConnection = this._context.CreateConnection();
             var musics = await dbConnection.QueryAsync<Music>(sqlQuery, param);
 
             return musics?.ToList() ?? new List<Music>();
@@ -115,12 +115,12 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> CountProcessedDataAsync(string? searchText)
         {
-            using IDbConnection dbConnection = _context.CreateConnection();
-
             var param = new DynamicParameters();
             string conditions = GetSearchConditions(searchText, param);
 
             string countQuery = $"SELECT COUNT(*) FROM Music WHERE ({conditions})";
+
+            using IDbConnection dbConnection = this._context.CreateConnection();
             return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);
         }
 
@@ -148,4 +148,3 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         }
     }
 }
-

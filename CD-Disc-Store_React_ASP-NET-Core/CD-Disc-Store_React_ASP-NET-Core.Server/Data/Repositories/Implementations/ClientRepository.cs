@@ -23,7 +23,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         {
             if (id is null)
             {
-                throw new ArgumentNullException(CLIENT_NOT_FOUND_BY_ID_ERROR);
+                throw new ArgumentNullException(nameof(id), CLIENT_NOT_FOUND_BY_ID_ERROR);
             }
 
             using IDbConnection dbConnection = this._context.CreateConnection();
@@ -117,7 +117,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
             string sqlQuery = $"SELECT * FROM Client WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
 
-            using var dbConnection = _context.CreateConnection();
+            using var dbConnection = this._context.CreateConnection();
             var clients = await dbConnection.QueryAsync<Client>(sqlQuery, param);
 
             return clients?.ToList() ?? new List<Client>();
@@ -125,12 +125,12 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> CountProcessedDataAsync(string? searchText)
         {
-            using IDbConnection dbConnection = _context.CreateConnection();
-
             var param = new DynamicParameters();
             string conditions = GetSearchConditions(searchText, param);
 
             string countQuery = $"SELECT COUNT(*) FROM Client WHERE ({conditions})";
+
+            using IDbConnection dbConnection = this._context.CreateConnection();
             return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);
         }
 

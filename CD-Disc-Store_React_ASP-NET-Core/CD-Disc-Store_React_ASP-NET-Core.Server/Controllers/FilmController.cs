@@ -2,6 +2,7 @@
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
@@ -17,9 +18,24 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IReadOnlyList<Film>>> GetAll()
+        public async Task<ActionResult<IReadOnlyList<Film>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            return Ok(await this._filmRepository.GetAllAsync());
+            var model = new IndexViewModel<Film>
+            {
+                SearchText = searchText,
+                SortOrder = sortOrder,
+                SortFieldName = sortField ?? "Id",
+                Skip = skip,
+                CountItems = await this._filmRepository.CountProcessedDataAsync(searchText),
+                PageSize = 20
+            };
+
+            return Ok(model.Items = await this._filmRepository.GetProcessedAsync(
+                        model.SearchText,
+                        model.SortOrder,
+                        model.SortFieldName,
+                        model.Skip,
+                        model.PageSize));
         }
 
         [HttpGet("GetFilm")]
@@ -54,7 +70,15 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             {
                 film.Id = Guid.NewGuid();
 
-                return Ok(await this._filmRepository.AddAsync(film));
+                var result = await this._filmRepository.AddAsync(film);
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Film created successfully", FilmId = film.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
+                }
             }
             catch (Exception ex)
             {
@@ -77,7 +101,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
             try
             {
-                return Ok(await this._filmRepository.UpdateAsync(film));
+                var result = await this._filmRepository.UpdateAsync(film);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Film updated successfully", MusicId = film.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
+                }
             }
             catch (Exception ex)
             {
@@ -95,10 +128,29 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpDelete("Delete")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
         {
-            var film = await this._filmRepository.GetByIdAsync(id);
+            try
+            {
+                var film = await this._filmRepository.GetByIdAsync(id);
+                if (film == null)
+                {
+                    return NotFound();
+                }
 
-            return film == null ? NotFound()
-                : Ok(await this._filmRepository.DeleteAsync(film.Id));
+                var result = await this._filmRepository.DeleteAsync(film.Id);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Film deleted successfully", MusicId = id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
     }
 }

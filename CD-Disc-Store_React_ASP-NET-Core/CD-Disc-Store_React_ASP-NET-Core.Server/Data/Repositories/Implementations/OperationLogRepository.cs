@@ -3,6 +3,7 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using static Dapper.SqlMapper;
 
@@ -26,7 +27,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         {
             if (id is null)
             {
-                throw new ArgumentNullException(OPERATION_LOG_NOT_FOUND_BY_ID_ERROR);
+                throw new ArgumentNullException(nameof(id), OPERATION_LOG_NOT_FOUND_BY_ID_ERROR);
             }
 
             using IDbConnection dbConnection = this._context.CreateConnection();
@@ -149,6 +150,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
             return await dbConnection.ExecuteScalarAsync<bool>("SELECT COUNT(1) FROM OperationLog WHERE Id = @Id", new { Id = id });
+        }
+
+        public Task<IReadOnlyList<OperationLog>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> CountProcessedDataAsync(string? searchText)
+        {
+            throw new NotImplementedException();
         }
     }
 }

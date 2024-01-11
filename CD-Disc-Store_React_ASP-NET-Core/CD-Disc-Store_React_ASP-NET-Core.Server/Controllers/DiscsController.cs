@@ -66,7 +66,15 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
                 disc.Id = Guid.NewGuid();
 
-                return Ok(await this._discRepository.AddAsync(disc));
+                var result = await this._discRepository.AddAsync(disc);
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Disc created successfully", MusicId = disc.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
+                }
             }
             catch (Exception ex)
             {
@@ -77,7 +85,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         private async Task UploadFile(Disc disc)
         {
             string fileNameForStorage = FormFileName(disc.Name, disc.ImageFile.FileName);
-            disc.CoverImagePath = await _cloudStorage.UploadFileAsync(disc.ImageFile, fileNameForStorage);
+            disc.CoverImagePath = await this._cloudStorage.UploadFileAsync(disc.ImageFile, fileNameForStorage);
             disc.ImageStorageName = fileNameForStorage;
         }
 
@@ -118,7 +126,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     await UploadFile(disc);
                 }
 
-                return Ok(await this._discRepository.UpdateAsync(disc));
+                var result = await this._discRepository.UpdateAsync(disc);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Disc updated successfully", DiscId = disc.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
+                }
             }
             catch (Exception ex)
             {
@@ -136,19 +153,29 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpDelete("Delete")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id, IConfiguration configuration)
         {
-            var disc = await this._discRepository.GetByIdAsync(id);
-
-            if (disc is null)
+            try
             {
-                return NotFound();
-            }
+                var disc = await this._discRepository.GetByIdAsync(id);
+                if (disc == null)
+                {
+                    return NotFound();
+                }
 
-            if (disc.ImageStorageName != null && disc.ImageStorageName != configuration.GetValue<string>("DefaultImageStorageName"))
+                var result = await this._discRepository.DeleteAsync(disc.Id);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Disc deleted successfully", DiscId = id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
             {
-                await this._cloudStorage.DeleteFileAsync(disc.ImageStorageName);
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
             }
-
-            return Ok(await this._discRepository.DeleteAsync(disc.Id));
         }
     }
 }

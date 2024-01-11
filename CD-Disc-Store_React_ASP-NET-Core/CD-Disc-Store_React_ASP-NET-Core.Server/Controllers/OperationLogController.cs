@@ -89,7 +89,15 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             {
                 operationLog.Id = Guid.NewGuid();
 
-                return await this._operationLogRepository.AddAsync(operationLog);
+                var result = await this._operationLogRepository.AddAsync(operationLog);
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Operation log created successfully", OperationLogId = operationLog.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
+                }
             }
             catch (Exception ex)
             {
@@ -112,7 +120,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
             try
             {
-                return Ok(await this._operationLogRepository.UpdateAsync(operationLog));
+                var result = await this._operationLogRepository.UpdateAsync(operationLog);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Operation log updated successfully", OperationLogId = operationLog.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
+                }
             }
             catch (Exception ex)
             {
@@ -130,10 +147,29 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpDelete("Delete")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
         {
-            var operationLog = await this._operationLogRepository.GetByIdAsync(id);
+            try
+            {
+                var operationLog = await this._operationLogRepository.GetByIdAsync(id);
+                if (operationLog == null)
+                {
+                    return NotFound();
+                }
 
-            return operationLog == null ? NotFound()
-                : Ok(await this._operationLogRepository.DeleteAsync(operationLog.Id));
+                var result = await this._operationLogRepository.DeleteAsync(operationLog.Id);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Operation log deleted successfully", OperationLogId = operationLog.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
     }
 }
