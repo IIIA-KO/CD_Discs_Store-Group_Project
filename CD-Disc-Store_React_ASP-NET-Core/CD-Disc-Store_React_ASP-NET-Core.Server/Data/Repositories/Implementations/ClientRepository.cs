@@ -1,6 +1,7 @@
 ﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -11,7 +12,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
     {
         private readonly IDapperContext _context;
 
-        private const string CLIENT_NOT_FOUND_BY_ID_ERROR = "The client with specified Id was not found";
+        private const string CLIENT_NOT_FOUND_BY_ID_ERROR = "The client with specified Id was not found.";
 
         public ClientRepository(IDapperContext context)
         {
@@ -22,12 +23,12 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         {
             if (id is null)
             {
-                throw new NullReferenceException(CLIENT_NOT_FOUND_BY_ID_ERROR);
+                throw new ArgumentNullException(nameof(id), CLIENT_NOT_FOUND_BY_ID_ERROR);
             }
 
             using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.QueryFirstOrDefaultAsync<Client>($"SELECT * FROM Client WHERE Id = @Id", new { Id = id })
-                ?? throw new NullReferenceException(CLIENT_NOT_FOUND_BY_ID_ERROR);
+            var client = await dbConnection.QueryFirstOrDefaultAsync<Client>($"SELECT * FROM Client WHERE Id = @Id", new { Id = id });
+            return client ?? throw new NotFoundException(CLIENT_NOT_FOUND_BY_ID_ERROR);
         }
 
         public async Task<IReadOnlyList<Client>> GetAllAsync()
@@ -52,7 +53,10 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             {
                 currentClient = await this.GetByIdAsync(entity.Id);
             }
-            catch (NullReferenceException)
+            catch (Exception ex)
+                when (ex is ArgumentNullException
+                    || ex is NullReferenceException
+                    || ex is NotFoundException)
             {
                 throw;
             }
@@ -84,13 +88,12 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> DeleteAsync(Guid id)
         {
-            using IDbConnection dbConnection = this._context.CreateConnection();
-
             if (!await ExistsAsync(id))
             {
                 return 0;
             }
 
+            using IDbConnection dbConnection = this._context.CreateConnection();
             return await dbConnection.ExecuteAsync($"DELETE FROM Client WHERE Id = @Id", new { Id = id });
         }
 
@@ -114,7 +117,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
             string sqlQuery = $"SELECT * FROM Client WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
 
-            using var dbConnection = _context.CreateConnection();
+            using var dbConnection = this._context.CreateConnection();
             var clients = await dbConnection.QueryAsync<Client>(sqlQuery, param);
 
             return clients?.ToList() ?? new List<Client>();
@@ -122,12 +125,12 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> CountProcessedDataAsync(string? searchText)
         {
-            using IDbConnection dbConnection = _context.CreateConnection();
-
             var param = new DynamicParameters();
             string conditions = GetSearchConditions(searchText, param);
 
             string countQuery = $"SELECT COUNT(*) FROM Client WHERE ({conditions})";
+
+            using IDbConnection dbConnection = this._context.CreateConnection();
             return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);
         }
 

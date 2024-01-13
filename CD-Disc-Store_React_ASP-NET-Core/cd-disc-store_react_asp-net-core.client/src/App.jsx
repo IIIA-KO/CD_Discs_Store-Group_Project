@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import './App.css';
 import Home from './pages/Home/Home'
 import Disks from './pages/Disks/Disks'
@@ -12,8 +11,6 @@ import Header from './Header/Header';
 
 
 function App() {
-   
-
     return (
         <>
          <Header/>
@@ -27,8 +24,4 @@ function App() {
          </Routes>
         </>
     );
-    
-   
-}
-
 export default App;

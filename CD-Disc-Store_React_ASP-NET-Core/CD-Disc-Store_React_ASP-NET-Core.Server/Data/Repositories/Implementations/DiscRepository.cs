@@ -1,7 +1,9 @@
 ﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
+using Microsoft.Data.SqlClient;
 using System.Data;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
@@ -19,14 +21,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<Disc> GetByIdAsync(Guid? id)
         {
-            using IDbConnection dbConnection = this._context.CreateConnection();
 
             if (id is null)
             {
-                throw new NullReferenceException(DISC_NOT_FOUND_BY_ID_ERROR);
+                throw new ArgumentNullException(nameof(id), DISC_NOT_FOUND_BY_ID_ERROR);
             }
 
-            return await dbConnection.QueryFirstOrDefaultAsync<Disc>($"SELECT * FROM Disc WHERE Id = @Id", new { Id = id });
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            var disc = await dbConnection.QueryFirstOrDefaultAsync<Disc>("SELECT * FROM Disc WHERE Id = @Id", new { Id = id });
+
+            return disc ?? throw new NotFoundException(DISC_NOT_FOUND_BY_ID_ERROR);
         }
 
         public async Task<IReadOnlyList<Disc>> GetAllAsync()
@@ -41,7 +45,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
 
-            return await dbConnection.ExecuteAsync("INSERT INTO Disc (Id, [Name], Price, LeftOnStock, Rating) VALUES (@Id, @Name, @Price, @LeftOnStock, @Rating)", entity);
+            return await dbConnection.ExecuteAsync("INSERT INTO Disc (Id, [Name], Price, LeftOnStock, Rating, CoverImagePath, ImageStorageName) VALUES (@Id, @Name, @Price, @LeftOnStock, @Rating, @CoverImagePath, @ImageStorageName)", entity);
         }
 
         public async Task<int> UpdateAsync(Disc entity)
@@ -51,10 +55,14 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             {
                 currentDisc = await this.GetByIdAsync(entity.Id);
             }
-            catch (NullReferenceException)
+            catch (Exception ex)
+                when (ex is ArgumentNullException
+                    || ex is NullReferenceException
+                    || ex is NotFoundException)
             {
                 throw;
             }
+
             if (currentDisc != null && !IsEntityChanged(currentDisc, entity))
             {
                 return 0;
@@ -62,7 +70,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
             using IDbConnection dbConnection = this._context.CreateConnection();
 
-            return await dbConnection.ExecuteAsync("UPDATE Disc SET Name = @Name, Price = @Price, LeftOnStock = @LeftOnStock, Rating = @Rating WHERE Id = @Id", entity);
+            return await dbConnection.ExecuteAsync("UPDATE Disc SET Name = @Name, Price = @Price, LeftOnStock = @LeftOnStock, Rating = @Rating, CoverImagePath = @CoverImagePath, ImageStorageName = @ImageStorageName WHERE Id = @Id", entity);
         }
 
         public async Task<int> DeleteAsync(Guid id)
@@ -82,7 +90,19 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             return currentEntity.Name != entity.Name
                 || currentEntity.Price != entity.Price
                 || currentEntity.LeftOnStock != entity.LeftOnStock
-                || currentEntity.Rating != entity.Rating;
+                || currentEntity.Rating != entity.Rating
+                || currentEntity.CoverImagePath != entity.CoverImagePath
+                || currentEntity.ImageStorageName != entity.ImageStorageName;
+        }
+
+        public Task<IReadOnlyList<Disc>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> CountProcessedDataAsync(string? searchText)
+        {
+            throw new NotImplementedException();
         }
     }
 }

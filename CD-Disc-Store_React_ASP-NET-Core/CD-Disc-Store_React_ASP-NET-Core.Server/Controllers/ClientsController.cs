@@ -1,6 +1,7 @@
 ﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Atributes;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using System.Text.RegularExpressions;
@@ -18,8 +19,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             this._clientRepository = clientRepository;
         }
 
-        [HttpGet("Index")]
-        public async Task<ActionResult<IReadOnlyList<Client>>> Index(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IReadOnlyList<Client>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
             var model = new IndexViewModel<Client>
             {
@@ -39,7 +40,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                         model.PageSize));
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GetClient")]
         public async Task<ActionResult<Client>> GetClient(Guid? id)
         {
             if (id == null)
@@ -47,59 +48,82 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 return NotFound();
             }
 
-            var client = await this._clientRepository.GetByIdAsync(id);
-
-            if (client == null)
+            try
+            {
+                var client = await this._clientRepository.GetByIdAsync(id);
+                return Ok(client);
+            }
+            catch (NotFoundException)
             {
                 return NotFound();
             }
-
-            return Ok(client);
         }
 
         [HttpPost("Create")]
-        public async Task<int> Create([Bind("Id,FirstName,LastName,Address,City,ContactPhone,ContactMail,BirthDay,MarriedStatus,Sex,HasChild")] Client client)
+        public async Task<ActionResult<int>> Create([Bind("Id,FirstName,LastName,Address,City,ContactPhone,ContactMail,BirthDay,MarriedStatus,Sex,HasChild")] Client client)
         {
             if (!ModelState.IsValid && !ValidateContactDetails(client))
             {
-                return 0;
-            }
-
-            client.Id = Guid.NewGuid();
-
-            return await this._clientRepository.AddAsync(client);
-        }
-
-        [HttpPut("Edit")]
-        public async Task<int> Edit(Guid? id, [Bind("Id,FirstName,LastName,Address,City,ContactPhone,ContactMail,BirthDay,MarriedStatus,Sex,HasChild")] Client client)
-        {
-            if(id == null)
-            {
-                return 0;
-            }
-
-            if(id != client.Id)
-            {
-                return 0;
+                return BadRequest(ModelState);
             }
 
             try
             {
-                await this._clientRepository.UpdateAsync(client);
-            }
-            catch(Exception)
-            {
-                if(!await this._clientRepository.ExistsAsync(client.Id))
+                client.Id = Guid.NewGuid();
+
+                var result = await this._clientRepository.AddAsync(client);
+                if (result == 1)
                 {
-                    return 0;
+                    return Ok(new { Message = "Client created successfully", ClientId = client.Id });
                 }
                 else
                 {
-                    throw;
+                    return BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
                 }
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
+        }
 
-            return 1;
+        [HttpPut("Edit")]
+        public async Task<ActionResult<int>> Edit(Guid? id, [Bind("Id,FirstName,LastName,Address,City,ContactPhone,ContactMail,BirthDay,MarriedStatus,Sex,HasChild")] Client client)
+        {
+            if (id == null || client == null)
+            {
+                return BadRequest();
+            }
+
+            if (id != client.Id)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                var result = await this._clientRepository.UpdateAsync(client);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Client updated successfully", ClientId = client.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!await this._clientRepository.ExistsAsync(client.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    return StatusCode(500, $"Internal Server Error: {ex.Message}");
+                }
+            }
         }
 
         private bool ValidateContactDetails(Client client)
@@ -120,16 +144,31 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpDelete("Delete")]
-        public async Task<int> DeleteConfirmed(Guid id)
+        public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
         {
-            var client = await this._clientRepository.GetByIdAsync(id);
-
-            if (client != null)
+            try
             {
-                return await this._clientRepository.DeleteAsync(client.Id);
-            }
+                var client = await this._clientRepository.GetByIdAsync(id);
+                if (client == null)
+                {
+                    return NotFound();
+                }
 
-            return 0;
+                var result = await this._clientRepository.DeleteAsync(client.Id);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Client deleted successfully", MusicId = id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
     }
 }
