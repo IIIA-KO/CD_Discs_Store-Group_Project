@@ -9,6 +9,7 @@
     <SpaRoot>..\cd-disc-store_react_asp-net-core.client</SpaRoot>
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:5173</SpaProxyServerUrl>
+    <UserSecretsId>89b54111-8f0e-4c90-b56b-2ff5e5b2ce87</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
