@@ -15,6 +15,15 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
 
             builder.Services.AddControllers();
 
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowClientProjectOrigin",
+                    builder => builder.WithOrigins("https://localhost:5173")
+                                      .AllowAnyMethod()
+                                      .AllowAnyHeader());
+            });
+
             builder.Services.RegisterIdentity(builder.Configuration);
 
             builder.Services.AddSingleton<ICloudStorage, GoogleCloudStorage>();
@@ -35,10 +44,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
                 app.UseSwaggerUI();
             }
 
+            app.UseCors("AllowClientProjectOrigin");
+
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();
+
 
             app.MapControllers();
 
