@@ -7,10 +7,12 @@ import Music from './pages/Music/Music'
 import Cart from './pages/Cart/Card';
 import Profile from './pages/Profile/Profile';
 import {BrowserRouter,Routes,Route,Link} from 'react-router-dom'
+
 import Header from './Header/Header';
 
 
 function App() {
+    
     return (
         <>
          <Header/>
@@ -24,4 +26,5 @@ function App() {
          </Routes>
         </>
     );
+}
 export default App;

@@ -1,0 +1,10 @@
+img{
+    max-width: 200px;
+}
+.name{
+    font-weight: bold;
+}
+.info{
+    background-color: beige;
+    max-width: 200px;
+}
