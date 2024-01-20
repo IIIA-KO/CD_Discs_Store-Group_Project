@@ -1,8 +1,5 @@
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Atributes;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Data;
+using System.ComponentModel.DataAnnotations;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models
 {

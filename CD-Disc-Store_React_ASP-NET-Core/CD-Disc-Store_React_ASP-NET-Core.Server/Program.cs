@@ -19,11 +19,9 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
             {
                 options.AddPolicy("AllowClientProjectOrigin",
                     builder => builder.WithOrigins("https://localhost:5173")
-                                      .AllowAnyMethod()
-                                      .AllowAnyHeader());
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
             });
-
-            
 
             builder.Services.RegisterIdentity(builder.Configuration);
 
@@ -44,6 +42,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
             app.UseCors("AllowClientProjectOrigin");
 
             app.UseHttpsRedirection();
@@ -52,8 +51,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
             app.UseAuthorization();
 
             app.MapControllers();
-
-            app.MapFallbackToFile("/index.html");
 
             app.Run();
         }
