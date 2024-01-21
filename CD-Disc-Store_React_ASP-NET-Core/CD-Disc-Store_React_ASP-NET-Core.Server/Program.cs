@@ -1,7 +1,6 @@
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Implementations;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
-using Microsoft.AspNetCore.Identity;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server
 {
@@ -15,13 +14,12 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
 
             builder.Services.AddControllers();
 
-
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowClientProjectOrigin",
                     builder => builder.WithOrigins("https://localhost:5173")
-                                      .AllowAnyMethod()
-                                      .AllowAnyHeader());
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
             });
 
             builder.Services.RegisterIdentity(builder.Configuration);
@@ -32,8 +30,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
-
-            app.MapIdentityApi<IdentityUser>();
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
@@ -48,13 +44,12 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
 
             app.UseHttpsRedirection();
 
+            app.UseRouting();
+
             app.UseAuthentication();
             app.UseAuthorization();
 
-
             app.MapControllers();
-
-            app.MapFallbackToFile("/index.html");
 
             app.Run();
         }
