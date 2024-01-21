@@ -1,7 +1,6 @@
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Implementations;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
-using Microsoft.AspNetCore.Identity;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server
 {
@@ -32,8 +31,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
 
             var app = builder.Build();
 
-            app.MapIdentityApi<IdentityUser>();
-
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
@@ -46,6 +43,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
             app.UseCors("AllowClientProjectOrigin");
 
             app.UseHttpsRedirection();
+
+            app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();

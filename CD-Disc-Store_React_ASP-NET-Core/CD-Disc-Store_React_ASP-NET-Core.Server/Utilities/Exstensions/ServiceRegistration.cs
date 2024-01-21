@@ -1,8 +1,11 @@
-﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions
 {
@@ -19,6 +22,14 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions
             services.AddScoped<IFilmRepository, FilmRepositiry>();
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+
+
+            services.AddTransient<UserManager<IdentityUser>>();
+            services.AddTransient<SignInManager<IdentityUser>>();
+            services.AddTransient<RoleManager<IdentityRole>>();
+
+            services.AddScoped<IUserStore<IdentityUser>, UserStore<IdentityUser, IdentityRole, ApplicationDbContext, string>>();
+            services.AddScoped<IUserEmailStore<IdentityUser>, UserStore<IdentityUser, IdentityRole, ApplicationDbContext, string>>();
         }
 
         public static void RegisterIdentity(this IServiceCollection services, IConfiguration configuration)
@@ -28,11 +39,11 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions
             services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
             services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
 
             services.AddIdentityCore<IdentityUser>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddApiEndpoints();
+                .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddAuthentication();
         }

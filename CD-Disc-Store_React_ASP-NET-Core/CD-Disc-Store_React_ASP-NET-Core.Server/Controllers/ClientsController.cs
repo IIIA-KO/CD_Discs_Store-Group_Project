@@ -1,7 +1,8 @@
-﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Atributes;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using System.Text.RegularExpressions;
@@ -10,6 +11,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Roles = "Administrator")]
     public class ClientsController : Controller
     {
         private readonly IClientRepository _clientRepository;
