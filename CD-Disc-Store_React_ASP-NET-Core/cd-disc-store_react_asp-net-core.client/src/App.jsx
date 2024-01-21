@@ -15,6 +15,7 @@ function App() {
     return (
         <>
             <Header />
+            <main>
             <Routes>
                 <Route path='/' element={<Home />} />
                 <Route path='/disks' element={<Disks />} />
@@ -23,6 +24,7 @@ function App() {
                 <Route path='/cart' element={<Cart />} />
                 <Route path='/profile' element={<Profile />} />
             </Routes>
+            </main>
             <Footer />
         </>
     );
