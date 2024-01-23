@@ -1,4 +1,4 @@
-﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
@@ -110,6 +110,44 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             var fileExtension = Path.GetExtension(fileName);
             var fileNameForStorage = $"{title}-{Guid.NewGuid()}{fileExtension}";
             return fileNameForStorage;
+        }
+
+        [HttpGet("GetFilmsOnDisc/{id}")]
+        public async Task<ActionResult<IReadOnlyList<Film>>> GetFilms(Guid? id)
+        {
+            if (id == null || ! await this._discRepository.ExistsAsync(id.Value))
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var films = await this._discRepository.GetFilmsOnDiscAsync(id);
+                return Ok(films);
+            }
+            catch (NotFoundException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet("GetMusicOnDisc/{id}")]
+        public async Task<ActionResult<IReadOnlyList<Music>>> GetMusic(Guid? id)
+        {
+            if (id == null || ! await this._discRepository.ExistsAsync(id.Value))
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var musics = await this._discRepository.GetMusicOnDiscAsync(id);
+                return Ok(musics);
+            }
+            catch (NotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpPut("Edit")]

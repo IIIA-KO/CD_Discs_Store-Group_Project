@@ -1,0 +1,37 @@
+footer{
+    background: #292A2D;
+    padding:100px 20%;
+    list-style: none;
+    position:relative;
+    min-height: 200px;
+    display:flex;
+    justify-content: center;
+}
+
+.authors{
+    width:100%;
+    display: flex;
+    justify-content: space-around;
+    font-size: 12px;
+    font-weight: 400;
+    color:white;
+    flex-wrap: wrap;
+}
+
+
+.copyright{
+    font-size: 20px;
+    font-weight: 400;
+    color: #818080;
+
+    position:absolute;
+    bottom: 50px;
+}
+
+.team>li:first-child{
+    font-size: 16px;
+}
+
+.team{
+    margin-left:10px; margin-right: 10px;
+}

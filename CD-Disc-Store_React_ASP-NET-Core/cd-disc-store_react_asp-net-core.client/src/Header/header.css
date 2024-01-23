@@ -48,7 +48,7 @@ ul li {
     list-style: none;
 }
 
-ul li:hover {
+header ul li:hover {
     text-decoration: underline;
     color: white;
 }
@@ -59,18 +59,18 @@ ul li:hover {
     gap: 40px;
 }
 
-button {
+header button {
     background: none;
     border: 1px solid white;
     padding: 10px 30px;
     max-width: 6.5rem;
 }
 
-button:hover {
+header button:hover {
     background-color: #fff;
 }
 
-button:hover a {
+header button:hover a {
     color: #292A2D;
 }
 
