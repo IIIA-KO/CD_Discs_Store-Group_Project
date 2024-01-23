@@ -1,4 +1,4 @@
-﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Microsoft.AspNetCore.Mvc;
@@ -6,7 +6,9 @@ using Microsoft.Data.SqlClient;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
-	public class OrderController : Controller
+    [ApiController]
+    [Route("[controller]")]
+    public class OrderController : Controller
 	{
 		private readonly IOrderRepository _orderRepository;
 
