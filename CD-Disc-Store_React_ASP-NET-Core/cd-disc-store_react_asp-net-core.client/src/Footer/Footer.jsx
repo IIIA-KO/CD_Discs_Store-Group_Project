@@ -10,7 +10,7 @@ const Footer = () => {
                     </ul>
                     <ul className='team'>
                         <li>Architect</li>
-                        <li>Illia Kotvitskiy</li>
+                        <li>Illia Kotvitskyi</li>
                     </ul>
                     <ul className='team'>
                         <li>Project manager</li>
