@@ -38,7 +38,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 						model.PageSize));
 		}
 
-		[HttpGet("GetMusic")]
+		[HttpGet("GetOrder")]
 		public async Task<ActionResult<Order>> GetDisc(Guid? id)
 		{
 			if (id == null)
