@@ -1,11 +1,10 @@
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
-using System.Security.Claims;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions
 {
@@ -46,6 +45,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddAuthentication();
+        }
+
+        public static void ConfigStorageOptions(this IServiceCollection services, IConfiguration configuration)
+        {
+            var cloudUrls = configuration.GetSection("URLs").Get<CloudUrls>();
+            var defaultImageNames = configuration.GetSection("DefaultImageStorageNames").Get<DefaultImageNames>();
+
+            var storageOptions = new StorageOptions(defaultImageNames, cloudUrls);
+
+            services.AddSingleton(storageOptions);
         }
     }
 }

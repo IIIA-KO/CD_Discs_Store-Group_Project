@@ -21,7 +21,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<Disc> GetByIdAsync(Guid? id)
         {
-
             if (id is null)
             {
                 throw new ArgumentNullException(nameof(id), DISC_NOT_FOUND_BY_ID_ERROR);
