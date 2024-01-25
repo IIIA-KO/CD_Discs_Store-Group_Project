@@ -1,4 +1,4 @@
-﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
@@ -111,7 +111,10 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             {
                 currentOperationLog = await this.GetByIdAsync(entity.Id);
             }
-            catch (NullReferenceException)
+            catch (Exception ex)
+                when (ex is ArgumentNullException
+                    || ex is NullReferenceException
+                    || ex is NotFoundException)
             {
                 throw;
             }

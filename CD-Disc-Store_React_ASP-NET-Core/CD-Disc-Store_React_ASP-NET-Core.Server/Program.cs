@@ -24,6 +24,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
 
             builder.Services.RegisterIdentity(builder.Configuration);
 
+            builder.Services.ConfigStorageOptions(builder.Configuration);
             builder.Services.AddSingleton<ICloudStorage, GoogleCloudStorage>();
 
             builder.Services.AddEndpointsApiExplorer();

@@ -1,6 +1,8 @@
-﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 
@@ -12,10 +14,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
     public class MusicController : Controller
     {
         private readonly IMusicRepository _musicRepository;
+        private readonly ICloudStorage _cloudStorage;
 
-        public MusicController(IMusicRepository musicRepository)
+
+        public MusicController(IMusicRepository musicRepository, ICloudStorage cloudStorage)
         {
             this._musicRepository = musicRepository;
+            this._cloudStorage = cloudStorage;
         }
 
         [HttpGet("GetAll")]
@@ -59,7 +64,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPost("Create")]
-        public async Task<ActionResult<int>> Create([Bind("Id,Name,Genre,Artist,Language")] Music music)
+        public async Task<ActionResult<int>> Create([Bind("Id,Name,Genre,Artist,Language,CoverImagePath,ImageStorageName,ImageFile")] Music music, StorageOptions storageOptions)
         {
             if (!ModelState.IsValid)
             {
@@ -68,17 +73,26 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
             try
             {
-                music.Id = Guid.NewGuid();
-
-                var result = await this._musicRepository.AddAsync(music);
-                if (result == 1)
+                if (music.ImageFile != null)
                 {
-                    return Ok(new { Message = "Music created successfully", MusicId = music.Id });
+                    if (!await this._cloudStorage.UploadFileAsync(music))
+                    {
+                        return BadRequest(new { Message = $"Couldn't upload {typeof(Music).Name} cover to storage. No records were added to database." });
+                    }
                 }
                 else
                 {
-                    return BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
+                    music.CoverImagePath = storageOptions.GetDefaultMusicCoverImagePath(music);
+                    music.ImageStorageName = storageOptions.GetDefaultMusicImageStorageName(music);
                 }
+
+                music.Id = Guid.NewGuid();
+
+                var result = await this._musicRepository.AddAsync(music);
+
+                return result == 1
+                    ? Ok(new { Message = "Music created successfully", MusicId = music.Id })
+                    : BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
             }
             catch (Exception ex)
             {
@@ -87,46 +101,49 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPut("Edit")]
-        public async Task<ActionResult<int>> Edit(Guid? id, [Bind("Id,Name,Genre,Artist,Language")] Music music)
+        public async Task<ActionResult<int>> Edit(Guid? existingMusicId, [Bind("Id,Name,Genre,Artist,Language,CoverImagePath,ImageStorageName,ImageFile")] Music changed)
         {
-            if (id == null || music == null)
+            if (!existingMusicId.HasValue || changed == null)
             {
-                return BadRequest();
+                return BadRequest(new { Message = "Failed to update music. Invalid Id was provided." });
             }
 
-            if (id != music.Id)
+            if (!ModelState.IsValid || existingMusicId.Value != changed.Id)
             {
-                return BadRequest();
+                ModelState.AddModelError("Id", "Failed to update music. Existing Music Id is not equal to Changed Music Id");
+                return BadRequest(ModelState);
             }
 
             try
             {
-                var result = await this._musicRepository.UpdateAsync(music);
+                var existing = await this._musicRepository.GetByIdAsync(existingMusicId.Value);
 
-                if (result == 1)
+                if (changed.ImageFile != null)
                 {
-                    return Ok(new { Message = "Music updated successfully", MusicId = music.Id });
+                    if (existing.ImageStorageName != null)
+                    {
+                        await this._cloudStorage.DeleteFileAsync(existing.ImageStorageName);
+                    }
+
+                    await this._cloudStorage.UploadFileAsync(changed);
                 }
-                else
-                {
-                    return BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
-                }
+
+                var result = await this._musicRepository.UpdateAsync(changed);
+
+                return result == 1
+                    ? Ok(new { Message = "Music updated successfully", MusicId = changed.Id })
+                    : BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
             }
             catch (Exception ex)
             {
-                if (!await this._musicRepository.ExistsAsync(music.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    return StatusCode(500, $"Internal Server Error: {ex.Message}");
-                }
+                return !await this._musicRepository.ExistsAsync(changed.Id)
+                    ? NotFound()
+                    : StatusCode(500, $"Internal Server Error: {ex.Message}");
             }
         }
 
         [HttpDelete("Delete")]
-        public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
+        public async Task<ActionResult<int>> DeleteConfirmed(Guid id, StorageOptions storageOptions)
         {
             try
             {
@@ -136,16 +153,17 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     return NotFound();
                 }
 
+                if (!string.IsNullOrEmpty(music.ImageStorageName)
+                    && music.ImageStorageName != storageOptions.GetDefaultMusicImageStorageName(music))
+                {
+                    await this._cloudStorage.DeleteFileAsync(music.ImageStorageName);
+                }
+
                 var result = await this._musicRepository.DeleteAsync(music.Id);
 
-                if (result == 1)
-                {
-                    return Ok(new { Message = "Music deleted successfully", MusicId = id });
-                }
-                else
-                {
-                    return BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
-                }
+                return result == 1
+                    ? Ok(new { Message = "Music deleted successfully", MusicId = id })
+                    : BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
             }
             catch (Exception ex)
             {

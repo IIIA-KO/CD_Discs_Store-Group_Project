@@ -1,4 +1,4 @@
-﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
@@ -40,7 +40,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         public async Task<int> AddAsync(Film entity)
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("INSERT INTO Film (Id, [Name], Genre, Producer, MainRole, AgeLimit) VALUES (@Id, @Name, @Genre, @Producer, @MainRole, @AgeLimit)", entity);
+            return await dbConnection.ExecuteAsync("INSERT INTO Film (Id, [Name], Genre, Producer, MainRole, AgeLimit, CoverImagePath, ImageStorageName) VALUES (@Id, @Name, @Genre, @Producer, @MainRole, @AgeLimit, @CoverImagePath, @ImageStorageName)", entity);
         }
 
         public async Task<int> UpdateAsync(Film entity)
@@ -64,7 +64,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             }
 
             using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("UPDATE Film SET Name = @Name, Genre = @Genre, Producer = @Producer, MainRole = @MainRole, AgeLimit = @AgeLimit WHERE Id = @Id", entity);
+            return await dbConnection.ExecuteAsync("UPDATE Film SET Name = @Name, Genre = @Genre, Producer = @Producer, MainRole = @MainRole, AgeLimit = @AgeLimit, CoverImagePath = @CoverImagePath, ImageStorageName = @ImageStorageName WHERE Id = @Id", entity);
         }
 
         public bool IsEntityChanged(Film currentEntity, Film entity)
@@ -73,7 +73,9 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
                 || currentEntity.Genre != entity.Genre
                 || currentEntity.Producer != entity.Producer
                 || currentEntity.MainRole != entity.MainRole
-                || currentEntity.AgeLimit != entity.AgeLimit;
+                || currentEntity.AgeLimit != entity.AgeLimit
+                || currentEntity.CoverImagePath != entity.CoverImagePath
+                || currentEntity.ImageStorageName != entity.ImageStorageName;
         }
 
         public async Task<int> DeleteAsync(Guid id)
