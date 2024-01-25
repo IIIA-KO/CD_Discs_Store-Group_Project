@@ -94,15 +94,68 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
                 || currentEntity.ImageStorageName != entity.ImageStorageName;
         }
 
-        public Task<IReadOnlyList<Disc>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
-        {
-            throw new NotImplementedException();
-        }
+		public async Task<IReadOnlyList<Disc>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
+		{
+			if (string.IsNullOrEmpty(sortField) || !IndexViewModel<Film>.AllFieldNames.Contains(sortField))
+			{
+				return await GetAllAsync();
+			}
 
-        public Task<int> CountProcessedDataAsync(string? searchText)
-        {
-            throw new NotImplementedException();
-        }
+			string sortOrderString = sortOrder == SortOrder.Descending ? "DESC" : "ASC";
+
+			var param = new DynamicParameters();
+			string conditions = GetSearchConditions(searchText, param);
+			string sqlQuery = $"SELECT * FROM Disc WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+
+			using IDbConnection dbConnection = this._context.CreateConnection();
+			var discs = await dbConnection.QueryAsync<Disc>(sqlQuery, param);
+
+			return discs?.ToList() ?? new List<Disc>();
+		}
+
+		public async Task<int> CountProcessedDataAsync(string? searchText)
+		{
+			var param = new DynamicParameters();
+			string conditions = GetSearchConditions(searchText, param);
+
+			string countQuery = $"SELECT COUNT(*) FROM Disc WHERE ({conditions})";
+
+			using IDbConnection dbConnection = this._context.CreateConnection();
+			return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);
+		}
+
+		private string GetSearchConditions(string? searchText, DynamicParameters param)
+		{
+			if (string.IsNullOrWhiteSpace(searchText))
+			{
+				return "1=1";
+			}
+
+			var conditions = new List<string>();
+
+			foreach (var fieldName in IndexViewModel<Disc>.AllFieldNames)
+			{
+				var propertyType = typeof(Disc).GetProperty(fieldName)?.PropertyType;
+
+				if (propertyType == typeof(string))
+				{
+					conditions.Add($"{fieldName} LIKE @searchText");
+					param.Add("@searchText", $"%{searchText}%");
+				}
+				else if (propertyType == typeof(int) && int.TryParse(searchText, out var parsedInt))
+				{
+					conditions.Add($"{fieldName} = @searchInt");
+					param.Add("@searchInt", parsedInt);
+				}
+				else if (propertyType == typeof(decimal) && int.TryParse(searchText, out var parsedDecimal))
+				{
+					conditions.Add($"{fieldName} = @searchDecimal");
+					param.Add("@searchDecimal", parsedDecimal);
+				}
+			}
+
+			return string.Join(" OR ", conditions);
+		}
 
         public async Task<IReadOnlyList<Film>> GetFilmsOnDiscAsync(Guid? id)
         {
