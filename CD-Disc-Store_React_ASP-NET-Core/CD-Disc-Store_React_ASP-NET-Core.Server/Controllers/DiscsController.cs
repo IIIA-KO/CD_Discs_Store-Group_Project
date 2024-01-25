@@ -21,10 +21,25 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll()
+        public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            return Ok(await this._discRepository.GetAllAsync());
-        }
+			var model = new IndexViewModel<Disc>
+			{
+				SearchText = searchText,
+				SortOrder = sortOrder,
+				SortFieldName = sortField ?? "Id",
+				Skip = skip,
+				CountItems = await this._discRepository.CountProcessedDataAsync(searchText),
+				PageSize = 20
+			};
+
+			return Ok(model.Items = await this._discRepository.GetProcessedAsync(
+						model.SearchText,
+						model.SortOrder,
+						model.SortFieldName,
+						model.Skip,
+						model.PageSize));
+		}
 
         [HttpGet("GetDisc")]
         public async Task<ActionResult<Disc>> GetDisc(Guid? id)
