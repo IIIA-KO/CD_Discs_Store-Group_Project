@@ -3,7 +3,6 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -107,7 +106,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
 			var param = new DynamicParameters();
 			string conditions = GetSearchConditions(searchText, param);
-			string sqlQuery = $"SELECT * FROM Film WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+			string sqlQuery = $"SELECT * FROM Disc WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
 
 			using IDbConnection dbConnection = this._context.CreateConnection();
 			var discs = await dbConnection.QueryAsync<Disc>(sqlQuery, param);
@@ -120,7 +119,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 			var param = new DynamicParameters();
 			string conditions = GetSearchConditions(searchText, param);
 
-			string countQuery = $"SELECT COUNT(*) FROM Film WHERE ({conditions})";
+			string countQuery = $"SELECT COUNT(*) FROM Disc WHERE ({conditions})";
 
 			using IDbConnection dbConnection = this._context.CreateConnection();
 			return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);

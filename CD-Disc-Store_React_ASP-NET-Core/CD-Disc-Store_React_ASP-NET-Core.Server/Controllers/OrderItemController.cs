@@ -39,7 +39,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 		}
 
 		[HttpGet("GetOrderItem")]
-		public async Task<ActionResult<OrderItem>> GetDisc(Guid? id)
+		public async Task<ActionResult<OrderItem>> GetOrderItem(Guid? id)
 		{
 			if (id == null)
 			{
@@ -48,8 +48,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
 			try
 			{
-				var music = await this._orderItemRepository.GetByIdAsync(id);
-				return Ok(music);
+				var orderItem = await this._orderItemRepository.GetByIdAsync(id);
+				return Ok(orderItem);
 			}
 			catch (NotFoundException)
 			{
@@ -129,13 +129,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 		{
 			try
 			{
-				var music = await this._orderItemRepository.GetByIdAsync(id);
-				if (music == null)
+				var orderItem = await this._orderItemRepository.GetByIdAsync(id);
+				if (orderItem == null)
 				{
 					return NotFound();
 				}
 
-				var result = await this._orderItemRepository.DeleteAsync(music.Id);
+				var result = await this._orderItemRepository.DeleteAsync(orderItem.Id);
 
 				if (result == 1)
 				{
