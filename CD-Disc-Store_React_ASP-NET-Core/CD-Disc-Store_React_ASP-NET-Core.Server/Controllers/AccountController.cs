@@ -1,10 +1,9 @@
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
-using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
@@ -28,7 +27,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         {
             try
             {
-
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
@@ -95,7 +93,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         {
             try
             {
-                await _signInManager.SignOutAsync();
+                await this._signInManager.SignOutAsync();
                 return Ok("Logout successful");
             }
             catch (Exception ex)
@@ -103,7 +101,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 return StatusCode(500, $"An error occurred during logout. {ex.Message}");
             }
         }
-
 
         [HttpGet("Users")]
         [Authorize(Roles = "Administrator")]
@@ -125,14 +122,58 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> GetUserRoles(string userId)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await this._userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return NotFound("User not found");
             }
 
-            var userRoles = await _userManager.GetRolesAsync(user);
+            var userRoles = await this._userManager.GetRolesAsync(user);
             return Ok(userRoles);
+        }
+
+        [HttpPost("AssignRoles/{userId}")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> AssignRoles(string userId, [FromBody] List<string> roles)
+        {
+            try
+            {
+                var requestingUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (userId == requestingUserId)
+                {
+                    return BadRequest("You are not allowed to manipulate your own account.");
+                }
+
+                var user = await this._userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+
+                var userRoles = await this._userManager.GetRolesAsync(user);
+                if (userRoles.Contains("Administrator"))
+                {
+                    return BadRequest("You cannot change roles of other Administrators");
+                }
+
+                await this._userManager.RemoveFromRolesAsync(user, userRoles);
+
+                if (roles == null || roles.Count == 0)
+                {
+                    roles = new List<string> { "Client" };
+                }
+
+                var result = await this._userManager.AddToRolesAsync(user, roles);
+
+                return result.Succeeded
+                    ? Ok($"Roles assigned successfully for user {user.UserName}")
+                    : BadRequest(result.Errors);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred during role assignment. {ex.Message}");
+            }
         }
 
         [HttpDelete("DeleteAccount")]
@@ -141,18 +182,17 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         {
             try
             {
-
-                var user = await _userManager.GetUserAsync(User);
+                var user = await this._userManager.GetUserAsync(User);
                 if (user == null)
                 {
                     return NotFound("User not found");
                 }
 
-                var result = await _userManager.DeleteAsync(user);
+                var result = await this._userManager.DeleteAsync(user);
 
                 if (result.Succeeded)
                 {
-                    await _signInManager.SignOutAsync();
+                    await this._signInManager.SignOutAsync();
                     return Ok();
                 }
                 else
