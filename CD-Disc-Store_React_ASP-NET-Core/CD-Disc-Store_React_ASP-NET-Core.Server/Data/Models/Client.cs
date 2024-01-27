@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Atributes;
 
@@ -39,10 +39,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models
         [Required(ErrorMessage = "The \"Birth day\" field is required")]
         public DateTime BirthDay { get; set; }
 
+        [Required(ErrorMessage = "The \"Married status\" field is required")]
         public bool MarriedStatus { get; set; } = false;
 
+        [Required(ErrorMessage = "The \"Sex\" field is required")]
         public bool Sex { get; set; } = false;
 
+        [Required(ErrorMessage = "The \"Has child\" field is required")]
         public bool HasChild { get; set; } = false;
     }
 }

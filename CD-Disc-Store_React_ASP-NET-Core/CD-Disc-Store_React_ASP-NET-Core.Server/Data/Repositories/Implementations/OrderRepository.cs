@@ -1,10 +1,10 @@
-﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
-using Microsoft.Data.SqlClient;
 using System.Data;
+using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
@@ -13,7 +13,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         private readonly IDapperContext _context;
         private readonly IClientRepository _clientRepository;
 
-        private const string ORDER_NOT_FOUND_BY_ID = "The order with specified Id was not found.";
+        private const string ORDER_NOT_FOUND_BY_ID = "The Order with specified Id was not found.";
         private const string CLIENT_DOES_NOT_EXIST = "The Client with specified Id does not exist. Cannot Add Order";
 
         public OrderRepository(IDapperContext context, IClientRepository clientRepository)

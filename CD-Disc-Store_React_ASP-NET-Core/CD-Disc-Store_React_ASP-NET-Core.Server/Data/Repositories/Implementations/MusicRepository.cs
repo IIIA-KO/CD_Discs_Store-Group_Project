@@ -1,4 +1,4 @@
-﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
@@ -41,7 +41,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         public async Task<int> AddAsync(Music entity)
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("INSERT INTO Music (Id, [Name], Genre, Artist, [Language]) VALUES (@Id, @Name, @Genre, @Artist, @Language)", entity);
+            return await dbConnection.ExecuteAsync("INSERT INTO Music (Id, [Name], Genre, Artist, [Language], CoverImagePath, ImageStorageName) VALUES (@Id, @Name, @Genre, @Artist, @Language, @CoverImagePath, @ImageStorageName)", entity);
         }
 
         public async Task<int> UpdateAsync(Music entity)
@@ -65,7 +65,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             }
 
             using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("UPDATE Music SET Name = @Name, Genre = @Genre, Artist = @Artist, Language = @Language WHERE Id = @Id", entity);
+            return await dbConnection.ExecuteAsync("UPDATE Music SET Name = @Name, Genre = @Genre, Artist = @Artist, Language = @Language, CoverImagePath = @CoverImagePath, ImageStorageName = @ImageStorageName WHERE Id = @Id", entity);
         }
 
         public bool IsEntityChanged(Music currentEntity, Music entity)
@@ -73,7 +73,9 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             return currentEntity.Name != entity.Name
                 || currentEntity.Genre != entity.Genre
                 || currentEntity.Artist != entity.Artist
-                || currentEntity.Language != entity.Language;
+                || currentEntity.Language != entity.Language
+                || currentEntity.CoverImagePath != entity.CoverImagePath
+                || currentEntity.ImageStorageName != entity.ImageStorageName;
         }
 
         public async Task<int> DeleteAsync(Guid id)
