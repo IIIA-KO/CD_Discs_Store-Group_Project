@@ -1,0 +1,33 @@
+.conteudo {
+    max-width: 1280px;
+}
+
+.carrousel {
+    display: grid;
+    grid-auto-flow: column;
+    scroll-behavior: smooth;
+    gap: 1.2rem;
+    overflow-x: auto;
+
+    overscroll-behavior-x:auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    /* Тонкая прокрутка по умолчанию */
+    scrollbar-color: #741d1d transparent;
+
+}
+
+/* .carrousel::-webkit-scrollbar{
+    display: none;
+} */
+.cardo {
+    scroll-snap-align: start;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.swiper-scrollbar {
+    --swiper-scrollbar-bottom: 0;
+    --swiper-scrollbar-drag-bg-color: #dda3b6;
+    --swiper-scrollbar-size: 5px;
+  }
