@@ -1,10 +1,16 @@
-import React, { useEffect }  from 'react'
+import React, { useEffect, useState } from 'react'
+import DiskSearch from '../../DiskSearch/DiskSearch';
 
 const Disks = () => {
- 
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+
+    fetch("https://localhost:7117/Discs/GetAll").then(res => res.json()).then(data => setItems(data)).catch(error => console.error(error));
+  }, [])
   return (
     <div>
-      <p>disks</p>
+      <DiskSearch disks={items} />
     </div>
   )
 }

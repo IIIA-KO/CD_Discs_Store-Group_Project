@@ -1,7 +1,7 @@
 import React from "react";
 import CardMusic from "../CardMusic/CardMusic";
 import './CardListMusic.css'
-const CardList = ({ data }) => {
+const CardListMusic = ({ data }) => {
   const postCard = data.map((item) => {
     const {id}=item
     return <CardMusic item={item} key={id} />;
@@ -10,4 +10,4 @@ const CardList = ({ data }) => {
   return <div className="Card-list">{postCard}</div>;
 };
 
-export default CardList;
+export default CardListMusic;
