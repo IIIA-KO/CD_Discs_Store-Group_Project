@@ -1,5 +1,6 @@
 ﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 
@@ -17,6 +18,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             this._musicRepository = musicRepository;
         }
 
+        [HttpGet("GetAll")]
         public async Task<ActionResult<IReadOnlyList<Music>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
             var model = new IndexViewModel<Music>
@@ -37,7 +39,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                         model.PageSize));
         }
 
-        [HttpGet("GetDisc")]
+        [HttpGet("GetMusic")]
         public async Task<ActionResult<Music>> GetDisc(Guid? id)
         {
             if (id == null)
@@ -45,14 +47,15 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 return NotFound();
             }
 
-            var music = await this._musicRepository.GetByIdAsync(id);
-
-            if (music == null)
+            try
+            {
+                var music = await this._musicRepository.GetByIdAsync(id);
+                return Ok(music);
+            }
+            catch (NotFoundException)
             {
                 return NotFound();
             }
-
-            return Ok(music);
         }
 
         [HttpPost("Create")]
@@ -63,9 +66,24 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 return BadRequest(ModelState);
             }
 
-            music.Id = Guid.NewGuid();
+            try
+            {
+                music.Id = Guid.NewGuid();
 
-            return Ok(await this._musicRepository.AddAsync(music));
+                var result = await this._musicRepository.AddAsync(music);
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Music created successfully", MusicId = music.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
 
         [HttpPut("Edit")]
@@ -83,7 +101,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
             try
             {
-                return Ok(await this._musicRepository.UpdateAsync(music));
+                var result = await this._musicRepository.UpdateAsync(music);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Music updated successfully", MusicId = music.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
+                }
             }
             catch (Exception ex)
             {
@@ -101,10 +128,29 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpDelete("Delete")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
         {
-            var music = await this._musicRepository.GetByIdAsync(id);
+            try
+            {
+                var music = await this._musicRepository.GetByIdAsync(id);
+                if (music == null)
+                {
+                    return NotFound();
+                }
 
-            return music == null ? NotFound()
-                : Ok(await this._musicRepository.DeleteAsync(music.Id));
+                var result = await this._musicRepository.DeleteAsync(music.Id);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Music deleted successfully", MusicId = id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
     }
 }

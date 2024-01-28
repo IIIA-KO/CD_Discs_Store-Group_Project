@@ -1,114 +1,140 @@
 ﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
-	[ApiController]
-	[Route("[controller]")]
-	public class OperationLogController : Controller
-	{
-		private readonly IOperationLogRepository _operationLogRepository;
+    [ApiController]
+    [Route("[controller]")]
+    public class OperationLogController : Controller
+    {
+        private readonly IOperationLogRepository _operationLogRepository;
 
         public OperationLogController(IOperationLogRepository operationLogRepository)
         {
-			this._operationLogRepository = operationLogRepository;
+            this._operationLogRepository = operationLogRepository;
         }
 
-		[HttpGet("GetAll")]
+        [HttpGet("GetAll")]
         public async Task<ActionResult<IReadOnlyList<OperationLog>>> GetAll()
-		{
-			return Ok(await this._operationLogRepository.GetAllAsync());
-		}
+        {
+            return Ok(await this._operationLogRepository.GetAllAsync());
+        }
 
-		[HttpGet("GetOperationLog")]
-		public async Task<ActionResult<OperationLog>> GetOperationLog(Guid? id)
-		{
-			if (id == null)
-			{
-				return NotFound();
-			}
+        [HttpGet("GetOperationLog")]
+        public async Task<ActionResult<OperationLog>> GetOperationLog(Guid? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
 
-			var operationLog = await this._operationLogRepository.GetByIdAsync(id);
+            try
+            {
+                var operationLog = await this._operationLogRepository.GetByIdAsync(id);
+                return Ok(operationLog);
+            }
+            catch (NotFoundException)
+            {
+                return NotFound();
+            }
+        }
 
-			if (operationLog == null)
-			{
-				return NotFound();
-			}
+        [HttpGet("Client/{id}")]
+        public async Task<ActionResult<OperationLog>> GetByClientOperationLog(Guid? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
 
-			return Ok(operationLog);
-		}
+            var operationLog = await this._operationLogRepository.GetByClientIdAsync(id);
 
-		[HttpGet("Client/{id}")]
-		public async Task<ActionResult<OperationLog>> GetByClientOperationLog(Guid? id)
-		{
-			if (id == null)
-			{
-				return NotFound();
-			}
+            if (operationLog == null)
+            {
+                return NotFound();
+            }
 
-			var operationLog = await this._operationLogRepository.GetByClientIdAsync(id);
+            return Ok(operationLog);
+        }
 
-			if (operationLog == null)
-			{
-				return NotFound();
-			}
+        [HttpGet("Disc/{id}")]
+        public async Task<ActionResult<OperationLog>> GetByDiscOperationLog(Guid? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
 
-			return Ok(operationLog);
-		}
+            var operationLog = await this._operationLogRepository.GetByDiscIdAsync(id);
 
-		[HttpGet("Disc/{id}")]
-		public async Task<ActionResult<OperationLog>> GetByDiscOperationLog(Guid? id)
-		{
-			if (id == null)
-			{
-				return NotFound();
-			}
+            if (operationLog == null)
+            {
+                return NotFound();
+            }
 
-			var operationLog = await this._operationLogRepository.GetByDiscIdAsync(id);
+            return Ok(operationLog);
+        }
 
-			if (operationLog == null)
-			{
-				return NotFound();
-			}
+        [HttpPost("Create")]
+        public async Task<ActionResult<int>> Create([Bind("Id,OperationDateTimeStart,OperationDateTimeEnd,ClientId,DiscId,OperationType,Quantity")] OperationLog operationLog)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-			return Ok(operationLog);
-		}
+            try
+            {
+                operationLog.Id = Guid.NewGuid();
 
-		[HttpPost("Create")]
-		public async Task<ActionResult<int>> Create([Bind("Id,OperationDateTimeStart,OperationDateTimeEnd,ClientId,DiscId,OperationType,Quantity")] OperationLog operationLog)
-		{
-			if (!ModelState.IsValid)
-			{
-				return BadRequest(ModelState);
-			}
+                var result = await this._operationLogRepository.AddAsync(operationLog);
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Operation log created successfully", OperationLogId = operationLog.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
+        }
 
-			operationLog.Id = Guid.NewGuid();
+        [HttpPut("Edit")]
+        public async Task<ActionResult<int>> Edit(Guid? id, [Bind("Id,OperationDateTimeStart,OperationDateTimeEnd,ClientId,DiscId,OperationType,Quantity")] OperationLog operationLog)
+        {
+            if (id == null || operationLog == null)
+            {
+                return BadRequest(ModelState);
+            }
 
-			return await this._operationLogRepository.AddAsync(operationLog);
-		}
+            if (id != operationLog.Id)
+            {
+                return BadRequest();
+            }
 
-		[HttpPut("Edit")]
-		public async Task<ActionResult<int>> Edit(Guid? id, [Bind("Id,OperationDateTimeStart,OperationDateTimeEnd,ClientId,DiscId,OperationType,Quantity")] OperationLog operationLog)
-		{
-			if (id == null || operationLog == null)
-			{
-				return BadRequest(ModelState);
-			}
+            try
+            {
+                var result = await this._operationLogRepository.UpdateAsync(operationLog);
 
-			if (id != operationLog.Id)
-			{
-				return BadRequest();
-			}
-
-			try
-			{
-				return Ok(await this._operationLogRepository.UpdateAsync(operationLog));
-			}
-			catch (Exception ex)
-			{
-				if (!await this._operationLogRepository.ExistsAsync(operationLog.Id))
-				{
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Operation log updated successfully", OperationLogId = operationLog.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!await this._operationLogRepository.ExistsAsync(operationLog.Id))
+                {
                     return NotFound();
                 }
                 else
@@ -116,15 +142,34 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     return StatusCode(500, $"Internal Server Error: {ex.Message}");
                 }
             }
-		}
+        }
 
-		[HttpDelete("Delete")]
-		public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
-		{
-			var operationLog = await this._operationLogRepository.GetByIdAsync(id);
+        [HttpDelete("Delete")]
+        public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
+        {
+            try
+            {
+                var operationLog = await this._operationLogRepository.GetByIdAsync(id);
+                if (operationLog == null)
+                {
+                    return NotFound();
+                }
 
-			return operationLog == null ? NotFound()
-				: Ok(await this._operationLogRepository.DeleteAsync(operationLog.Id));
-		}
-	}
+                var result = await this._operationLogRepository.DeleteAsync(operationLog.Id);
+
+                if (result == 1)
+                {
+                    return Ok(new { Message = "Operation log deleted successfully", OperationLogId = operationLog.Id });
+                }
+                else
+                {
+                    return BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
+        }
+    }
 }
