@@ -1,0 +1,45 @@
+.DiskCard{
+    margin-top: 2rem;
+}
+
+img {
+    max-width: 240px;
+   margin-bottom: -5px;
+}
+
+.name {
+    font-weight: bold;
+    max-width: 150px;
+}
+
+.infoDisk{
+    background-color: #D9D9D9;
+    max-width: 240px;
+    padding: 10px;
+    border-radius: 0 0 10px 10px;
+}
+
+.card {
+    max-width: 240px;
+}
+.forPurchase{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.forPurchase button{
+    background-color: #292A2D;
+    border: none;
+    color: white;
+    padding: 5px;
+    font-size: 16px;
+}
+.forPurchase button:hover{
+    background-color: #45464a;
+    
+}
+.price{
+    font-weight: bold;
+    font-size: 20px;
+}

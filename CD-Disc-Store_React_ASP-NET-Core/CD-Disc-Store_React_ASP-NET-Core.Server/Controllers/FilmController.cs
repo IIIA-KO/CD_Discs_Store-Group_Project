@@ -1,8 +1,10 @@
-﻿using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
@@ -11,10 +13,12 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
     public class FilmController : Controller
     {
         private readonly IFilmRepository _filmRepository;
+        private readonly ICloudStorage _cloudStorage;
 
-        public FilmController(IFilmRepository filmRepository)
+        public FilmController(IFilmRepository filmRepository, ICloudStorage cloudStorage)
         {
             this._filmRepository = filmRepository;
+            this._cloudStorage = cloudStorage;
         }
 
         [HttpGet("GetAll")]
@@ -59,7 +63,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPost("Create")]
-        public async Task<ActionResult<int>> Create([Bind("Id,Name,Genre,Producer,MainRole,AgeLimit")] Film film)
+        public async Task<ActionResult<int>> Create([Bind("Id,Name,Genre,Producer,MainRole,AgeLimit,CoverImagePath,ImageStorageName,ImageFile")] Film film, StorageOptions storageOptions)
         {
             if (!ModelState.IsValid)
             {
@@ -68,17 +72,26 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
             try
             {
-                film.Id = Guid.NewGuid();
-
-                var result = await this._filmRepository.AddAsync(film);
-                if (result == 1)
+                if (film.ImageFile != null)
                 {
-                    return Ok(new { Message = "Film created successfully", FilmId = film.Id });
+                    if (!await this._cloudStorage.UploadFileAsync(film))
+                    {
+                        return BadRequest(new { Message = $"Couldn't upload {typeof(Film).Name} cover to storage. No records were added to database." });
+                    }
                 }
                 else
                 {
-                    return BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
+                    film.CoverImagePath = storageOptions.GetDefaultFilmCoverImagePath(film);
+                    film.ImageStorageName = storageOptions.GetDefaultFilmImageStorageName(film);
                 }
+
+                film.Id = Guid.NewGuid();
+
+                var result = await this._filmRepository.AddAsync(film);
+
+                return result == 1
+                    ? Ok(new { Message = "Film created successfully", FilmId = film.Id })
+                    : BadRequest(new { Message = $"No records were added. Check the provided data. Rows affected {result}" });
             }
             catch (Exception ex)
             {
@@ -87,46 +100,49 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPut("Edit")]
-        public async Task<ActionResult<int>> Edit(Guid? id, [Bind("Id,Name,Genre,Producer,MainRole,AgeLimit")] Film film)
+        public async Task<ActionResult<int>> Edit(Guid? existingFilmId, [Bind("Id,Name,Genre,Producer,MainRole,AgeLimit,CoverImagePath,ImageStorageName,ImageFile")] Film changed)
         {
-            if (id == null || film == null)
+            if (!existingFilmId.HasValue || changed == null)
             {
-                return BadRequest();
+                return BadRequest(new { Message = "Failed to update film. Invalid Id was provided." });
             }
 
-            if (id != film.Id)
+            if (!ModelState.IsValid || existingFilmId.Value != changed.Id)
             {
-                return BadRequest();
+                ModelState.AddModelError("Id", "Failed to update film. Existing Film's Id is not equal to Changed Film's Id");
+                return BadRequest(ModelState);
             }
 
             try
             {
-                var result = await this._filmRepository.UpdateAsync(film);
+                var existing = await this._filmRepository.GetByIdAsync(existingFilmId.Value);
 
-                if (result == 1)
+                if (changed.ImageFile != null)
                 {
-                    return Ok(new { Message = "Film updated successfully", MusicId = film.Id });
+                    if (existing.ImageStorageName != null)
+                    {
+                        await this._cloudStorage.DeleteFileAsync(existing.ImageStorageName);
+                    }
+
+                    await this._cloudStorage.UploadFileAsync(changed);
                 }
-                else
-                {
-                    return BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
-                }
+
+                var result = await this._filmRepository.UpdateAsync(changed);
+
+                return result == 1
+                    ? Ok(new { Message = "Film updated successfully", MusicId = changed.Id })
+                    : BadRequest(new { Message = $"No records were updated. Check the provided data. Rows affected {result}" });
             }
             catch (Exception ex)
             {
-                if (!await this._filmRepository.ExistsAsync(film.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    return StatusCode(500, $"Internal Server Error: {ex.Message}");
-                }
+                return !await this._filmRepository.ExistsAsync(changed.Id)
+                    ? NotFound()
+                    : StatusCode(500, $"Internal Server Error: {ex.Message}");
             }
         }
 
         [HttpDelete("Delete")]
-        public async Task<ActionResult<int>> DeleteConfirmed(Guid id)
+        public async Task<ActionResult<int>> DeleteConfirmed(Guid id, StorageOptions storageOptions)
         {
             try
             {
@@ -136,16 +152,17 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     return NotFound();
                 }
 
+                if (!string.IsNullOrEmpty(film.ImageStorageName)
+                    && film.ImageStorageName != storageOptions.GetDefaultFilmImageStorageName(film))
+                {
+                    await this._cloudStorage.DeleteFileAsync(film.ImageStorageName);
+                }
+
                 var result = await this._filmRepository.DeleteAsync(film.Id);
 
-                if (result == 1)
-                {
-                    return Ok(new { Message = "Film deleted successfully", MusicId = id });
-                }
-                else
-                {
-                    return BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
-                }
+                return result == 1
+                    ? Ok(new { Message = "Film deleted successfully", MusicId = id })
+                    : BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
             }
             catch (Exception ex)
             {

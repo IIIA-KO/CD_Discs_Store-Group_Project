@@ -1,7 +1,6 @@
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Implementations;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
-using Microsoft.AspNetCore.Identity;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Implementations;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server
 {
@@ -15,16 +14,23 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
 
             builder.Services.AddControllers();
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowClientProjectOrigin",
+                    builder => builder.WithOrigins("https://localhost:5173")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+            });
+
             builder.Services.RegisterIdentity(builder.Configuration);
 
+            builder.Services.ConfigStorageOptions(builder.Configuration);
             builder.Services.AddSingleton<ICloudStorage, GoogleCloudStorage>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
-
-            app.MapIdentityApi<IdentityUser>();
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
@@ -35,14 +41,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
                 app.UseSwaggerUI();
             }
 
+            app.UseCors("AllowClientProjectOrigin");
+
             app.UseHttpsRedirection();
+
+            app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
-
-            app.MapFallbackToFile("/index.html");
 
             app.Run();
         }

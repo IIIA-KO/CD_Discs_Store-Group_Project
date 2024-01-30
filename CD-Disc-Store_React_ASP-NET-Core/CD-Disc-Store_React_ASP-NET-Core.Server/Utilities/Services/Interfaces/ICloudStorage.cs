@@ -1,9 +1,13 @@
-﻿namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Interfaces;
+
+namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces
 {
     public interface ICloudStorage
     {
-        Task<string> UploadFileAsync(IFormFile file, string fileNameForStorage);
+        Task<bool> UploadFileAsync(IImage entity);
 
         Task DeleteFileAsync(string fileNameForStorage);
+
+        string FormFileName(string title, string fileName);
     }
 }

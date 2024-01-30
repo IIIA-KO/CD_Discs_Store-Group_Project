@@ -1,0 +1,85 @@
+header {
+    background-color: #292A2D;
+}
+
+.header {
+    overflow: hidden;
+
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+a {
+    text-decoration: none;
+    color: white;
+
+}
+
+.logo p {
+    font-size: 2rem;
+}
+
+nav a {
+    font-size: 1.2rem;
+}
+
+button a {
+    font-size: 1rem;
+}
+
+.left_side {
+    display: flex;
+    justify-content: center;
+    align-items: first baseline;
+    gap: 5rem;
+}
+
+nav ul {
+    display: flex;
+    gap: 12px;
+}
+
+ul li {
+    list-style: none;
+}
+
+header ul li:hover {
+    text-decoration: underline;
+    color: white;
+}
+
+.CartAndProfile {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+}
+
+header button {
+    background: none;
+    border: 1px solid white;
+    padding: 10px 30px;
+    max-width: 6.5rem;
+}
+
+header button:hover {
+    background-color: #fff;
+}
+
+header button:hover a {
+    color: #292A2D;
+}
+
+.active {
+    
+    text-decoration: underline;
+}
+
+.btn {
+    background-color: #fff;
+    color: #292A2D;
+}
