@@ -1,6 +1,8 @@
 using Dapper;
 using System.Data;
+using static Dapper.SqlMapper;
 using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
@@ -8,16 +10,12 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class ClientRepository : IClientRepository
+    public class ClientRepository(IDapperContext context) : IClientRepository
     {
-        private readonly IDapperContext _context;
+        private readonly IDapperContext _context = context;
 
         private const string CLIENT_NOT_FOUND_BY_ID_ERROR = "The client with specified Id was not found.";
-
-        public ClientRepository(IDapperContext context)
-        {
-            this._context = context;
-        }
+        private const string USER_DOES_NOT_EXIST = "The User with specified Id does not exist. Cannot Add Client.";
 
         public async Task<Client> GetByIdAsync(Guid? id)
         {
@@ -31,6 +29,18 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             return client ?? throw new NotFoundException(CLIENT_NOT_FOUND_BY_ID_ERROR);
         }
 
+        public async Task<Client> GetByUserId(string userId)
+        {
+            if(!await UserExistsAsync(userId))
+            {
+                throw new InvalidOperationException(USER_DOES_NOT_EXIST);
+            }
+
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            return await dbConnection.QueryFirstOrDefaultAsync<Client>("SELECT * FROM Client WHERE UserId = @UserId", new { UserId = userId })
+                ?? throw new DatabaseOperationException("Failed to get Client with specified User Id.");
+        }
+
         public async Task<IReadOnlyList<Client>> GetAllAsync()
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
@@ -38,48 +48,109 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             return (IReadOnlyList<Client>)clients ?? new List<Client>();
         }
 
-        public async Task<int> AddAsync(Client entity)
+        public async Task<string> GetEmailAsync(Client client)
         {
+            if (!await UserExistsAsync(client.UserId))
+            {
+                throw new InvalidOperationException(USER_DOES_NOT_EXIST);
+            }
+
             using IDbConnection dbConnection = this._context.CreateConnection();
 
-            return await dbConnection.ExecuteAsync("INSERT INTO Client (Id, FirstName, LastName, [Address], City, ContactPhone, ContactMail, BirthDay, MarriedStatus, Sex, HasChild) " +
-            "VALUES (@Id, @FirstName, @LastName, @Address, @City, @ContactPhone, @ContactMail, @BirthDay, @MarriedStatus, @Sex, @HasChild)", entity);
+            return await dbConnection.QueryFirstOrDefaultAsync<string>("SELECT Email FROM dbo.AspNetUsers WHERE Id = @Id", new { Id = client.UserId })
+                ?? throw new DatabaseOperationException("Failed to get Email of Client with specified Id.");
+        }
+
+        public async Task<string> GetPhoneAsync(Client client)
+        {
+            if (!await UserExistsAsync(client.UserId))
+            {
+                throw new InvalidOperationException(USER_DOES_NOT_EXIST);
+            }
+
+            using IDbConnection dbConnection = this._context.CreateConnection();
+
+            return await dbConnection.QueryFirstOrDefaultAsync<string>("SELECT PhoneNumber FROM dbo.AspNetUsers WHERE Id = @Id", new { Id = client.UserId })
+                ?? throw new DatabaseOperationException("Failed to get Phone Number of Client with specified Id.");
+        }
+
+        public async Task<int> AddAsync(Client entity)
+        {
+            try
+            {
+                if (!await UserExistsAsync(entity.UserId))
+                {
+                    throw new InvalidOperationException(USER_DOES_NOT_EXIST);
+                }
+
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                dbConnection.Open();
+                
+                using IDbTransaction transaction = dbConnection.BeginTransaction();
+
+                try
+                {
+                    var result = await dbConnection.ExecuteAsync("INSERT INTO Client (Id, UserId, [Address], City, BirthDay, MarriedStatus, Sex, HasChild) " +
+                        "VALUES (@Id, @UserId, @Address, @City, @BirthDay, @MarriedStatus, @Sex, @HasChild)", entity, transaction);
+
+                    transaction.Commit();
+                    return result;
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException("Error while adding a Client to the database.", ex);
+            }
+        }
+
+        private async Task<bool> UserExistsAsync(string userId)
+        {
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            return await dbConnection.ExecuteScalarAsync<bool>("SELECT COUNT(1) FROM dbo.AspNetUsers WHERE Id = @Id", new { Id = userId });
         }
 
         public async Task<int> UpdateAsync(Client entity)
         {
-            Client currentClient;
             try
             {
-                currentClient = await this.GetByIdAsync(entity.Id);
+                Client currentClient;
+                try
+                {
+                    currentClient = await this.GetByIdAsync(entity.Id);
+
+                    if (currentClient is null || !IsEntityChanged(currentClient, entity))
+                    {
+                        return 0;
+                    }
+
+                    using IDbConnection dbConnection = this._context.CreateConnection();
+
+                    return await dbConnection.ExecuteAsync("UPDATE Client SET FirstName = @FirstName, LastName = @LastName, Address = @Address, City = @City, " +
+                    "ContactPhone = @ContactPhone, ContactMail = @ContactMail, BirthDay = @BirthDay, MarriedStatus = @MarriedStatus, Sex = @Sex, HasChild = @HasChild WHERE Id = @Id", entity);
+                }
+                catch (Exception ex)
+                    when (ex is ArgumentNullException
+                        || ex is NullReferenceException
+                        || ex is NotFoundException)
+                {
+                    throw;
+                }
             }
             catch (Exception ex)
-                when (ex is ArgumentNullException
-                    || ex is NullReferenceException
-                    || ex is NotFoundException)
             {
-                throw;
+                throw new DatabaseOperationException("Error while updating a Client in the database.", ex);
             }
-
-            if (currentClient != null && !IsEntityChanged(currentClient, entity))
-            {
-                return 0;
-            }
-
-            using IDbConnection dbConnection = this._context.CreateConnection();
-
-            return await dbConnection.ExecuteAsync("UPDATE Client SET FirstName = @FirstName, LastName = @LastName, Address = @Address, City = @City, " +
-            "ContactPhone = @ContactPhone, ContactMail = @ContactMail, BirthDay = @BirthDay, MarriedStatus = @MarriedStatus, Sex = @Sex, HasChild = @HasChild WHERE Id = @Id", entity);
         }
 
         public bool IsEntityChanged(Client currentEntity, Client entity)
         {
-            return currentEntity.FirstName != entity.FirstName
-                || currentEntity.LastName != entity.LastName
-                || currentEntity.Address != entity.Address
+            return currentEntity.Address != entity.Address
                 || currentEntity.City != entity.City
-                || currentEntity.ContactPhone != entity.ContactPhone
-                || currentEntity.ContactMail != entity.ContactMail
                 || currentEntity.BirthDay != entity.BirthDay
                 || currentEntity.MarriedStatus != entity.MarriedStatus
                 || currentEntity.Sex != entity.Sex
@@ -88,13 +159,20 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> DeleteAsync(Guid id)
         {
-            if (!await ExistsAsync(id))
+            try
             {
-                return 0;
-            }
+                if (!await ExistsAsync(id))
+                {
+                    return 0;
+                }
 
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync($"DELETE FROM Client WHERE Id = @Id", new { Id = id });
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                return await dbConnection.ExecuteAsync($"DELETE FROM Client WHERE Id = @Id", new { Id = id });
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException("Error while deleting a Client from the database.", ex);
+            }
         }
 
         public async Task<bool> ExistsAsync(Guid id)
@@ -105,7 +183,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<IReadOnlyList<Client>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
         {
-            if (string.IsNullOrEmpty(sortField) || !IndexViewModel<Client>.AllFieldNames.Contains(sortField))
+            if (string.IsNullOrEmpty(sortField)
+                || !GetAllViewModel<Client>.AllFieldNames.Any(f => string.Equals(f, sortField, StringComparison.OrdinalIgnoreCase)))
             {
                 return await GetAllAsync();
             }
@@ -117,7 +196,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
             string sqlQuery = $"SELECT * FROM Client WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
 
-            using var dbConnection = this._context.CreateConnection();
+            using IDbConnection dbConnection = this._context.CreateConnection();
             var clients = await dbConnection.QueryAsync<Client>(sqlQuery, param);
 
             return clients?.ToList() ?? new List<Client>();
@@ -136,14 +215,14 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         private string GetSearchConditions(string? searchText, DynamicParameters param)
         {
-            if (string.IsNullOrWhiteSpace(searchText))
+            if (string.IsNullOrEmpty(searchText))
             {
                 return "1=1";
             }
 
             var conditions = new List<string>();
 
-            foreach (var fieldName in IndexViewModel<Client>.AllFieldNames)
+            foreach (var fieldName in GetAllViewModel<Client>.AllFieldNames)
             {
                 var propertyType = typeof(Client).GetProperty(fieldName)?.PropertyType;
 

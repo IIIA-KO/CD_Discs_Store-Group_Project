@@ -1,23 +1,18 @@
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
-using Microsoft.Data.SqlClient;
 using System.Data;
-
+using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class MusicRepository : IMusicRepository
+    public class MusicRepository(IDapperContext context) : IMusicRepository
     {
-        private readonly IDapperContext _context;
+        private readonly IDapperContext _context = context;
         private const string MUSIC_NOT_FOUND_BY_ID_ERROR = "The music with specified Id was not found";
-
-        public MusicRepository(IDapperContext context)
-        {
-            this._context = context;
-        }
 
         public async Task<Music> GetByIdAsync(Guid? id)
         {
@@ -40,32 +35,46 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> AddAsync(Music entity)
         {
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("INSERT INTO Music (Id, [Name], Genre, Artist, [Language], CoverImagePath, ImageStorageName) VALUES (@Id, @Name, @Genre, @Artist, @Language, @CoverImagePath, @ImageStorageName)", entity);
+            try
+            {
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                return await dbConnection.ExecuteAsync("INSERT INTO Music (Id, [Name], Genre, Artist, [Language], CoverImagePath, ImageStorageName) VALUES (@Id, @Name, @Genre, @Artist, @Language, @CoverImagePath, @ImageStorageName)", entity);
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException("Error while adding a Music to the database.", ex);
+            }
         }
 
         public async Task<int> UpdateAsync(Music entity)
         {
-            Music currentMusic;
             try
             {
-                currentMusic = await this.GetByIdAsync(entity.Id);
+                Music currentMusic;
+                try
+                {
+                    currentMusic = await this.GetByIdAsync(entity.Id);
+                }
+                catch (Exception ex)
+                    when (ex is ArgumentNullException
+                        || ex is NullReferenceException
+                        || ex is NotFoundException)
+                {
+                    throw;
+                }
+
+                if (currentMusic != null && !IsEntityChanged(currentMusic, entity))
+                {
+                    return 0;
+                }
+
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                return await dbConnection.ExecuteAsync("UPDATE Music SET Name = @Name, Genre = @Genre, Artist = @Artist, Language = @Language, CoverImagePath = @CoverImagePath, ImageStorageName = @ImageStorageName WHERE Id = @Id", entity);
             }
             catch (Exception ex)
-                when (ex is ArgumentNullException
-                    || ex is NullReferenceException
-                    || ex is NotFoundException)
             {
-                throw;
+                throw new DatabaseOperationException("Error while updating a Music in the database.", ex);
             }
-
-            if (currentMusic != null && !IsEntityChanged(currentMusic, entity))
-            {
-                return 0;
-            }
-
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("UPDATE Music SET Name = @Name, Genre = @Genre, Artist = @Artist, Language = @Language, CoverImagePath = @CoverImagePath, ImageStorageName = @ImageStorageName WHERE Id = @Id", entity);
         }
 
         public bool IsEntityChanged(Music currentEntity, Music entity)
@@ -80,13 +89,20 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> DeleteAsync(Guid id)
         {
-            if (!await ExistsAsync(id))
+            try
             {
-                return 0;
-            }
+                if (!await ExistsAsync(id))
+                {
+                    return 0;
+                }
 
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync($"DELETE FROM Music WHERE Id = @Id", new { Id = id });
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                return await dbConnection.ExecuteAsync($"DELETE FROM Music WHERE Id = @Id", new { Id = id });
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException("Error while deleting a Music from the database.", ex);
+            }
         }
 
         public async Task<bool> ExistsAsync(Guid id)
@@ -97,7 +113,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<IReadOnlyList<Music>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
         {
-            if (string.IsNullOrEmpty(sortField) || !IndexViewModel<Music>.AllFieldNames.Contains(sortField))
+            if (string.IsNullOrEmpty(sortField)
+               || !GetAllViewModel<Music>.AllFieldNames.Any(f => string.Equals(f, sortField, StringComparison.OrdinalIgnoreCase)))
             {
                 return await GetAllAsync();
             }
@@ -128,14 +145,14 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         private string GetSearchConditions(string? searchText, DynamicParameters param)
         {
-            if (string.IsNullOrWhiteSpace(searchText))
+            if (string.IsNullOrEmpty(searchText))
             {
                 return "1=1";
             }
 
             var conditions = new List<string>();
 
-            foreach (var fieldName in IndexViewModel<Music>.AllFieldNames)
+            foreach (var fieldName in GetAllViewModel<Music>.AllFieldNames)
             {
                 var propertyType = typeof(Music).GetProperty(fieldName)?.PropertyType;
 

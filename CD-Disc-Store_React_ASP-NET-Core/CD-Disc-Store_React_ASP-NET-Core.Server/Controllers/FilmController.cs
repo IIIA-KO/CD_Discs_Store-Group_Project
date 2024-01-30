@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Authorization;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
@@ -10,6 +12,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Roles = "Administrator")]
     public class FilmController : Controller
     {
         private readonly IFilmRepository _filmRepository;
@@ -24,11 +27,11 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpGet("GetAll")]
         public async Task<ActionResult<IReadOnlyList<Film>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            var model = new IndexViewModel<Film>
+            var model = new GetAllViewModel<Film>
             {
                 SearchText = searchText,
                 SortOrder = sortOrder,
-                SortFieldName = sortField ?? "Id",
+                SortFieldName = sortField?.ToLowerInvariant() ?? "id",
                 Skip = skip,
                 CountItems = await this._filmRepository.CountProcessedDataAsync(searchText),
                 PageSize = 20

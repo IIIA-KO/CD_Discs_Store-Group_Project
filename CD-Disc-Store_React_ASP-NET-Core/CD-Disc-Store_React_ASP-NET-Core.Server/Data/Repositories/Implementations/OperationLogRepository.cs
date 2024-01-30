@@ -1,28 +1,23 @@
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
-using Microsoft.Data.SqlClient;
 using System.Data;
 using static Dapper.SqlMapper;
+using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class OperationLogRepository : IOperationLogRepository
+    public class OperationLogRepository(IDapperContext context, IOrderRepository orderRepository) : IOperationLogRepository
     {
-        private readonly IDapperContext _context;
-        private readonly IOrderRepository _orderRepository;
+        private readonly IDapperContext _context = context;
+        private readonly IOrderRepository _orderRepository = orderRepository;
 
         private const string OPERATION_LOG_NOT_FOUND_BY_ID_ERROR = "The operation with specified Id was not found";
         private const string ORDER_DOES_NOT_EXIST = "The Order with specified Id does not exist. Cannot Add Operation Log";
         private const string OPERATION_TYPE_DOES_NOT_EXIST = "The Operation Type with specified Id does not exist. Cannot Add Operation Log";
 
-        public OperationLogRepository(IDapperContext context, IOrderRepository orderRepository)
-        {
-            this._context = context;
-            this._orderRepository = orderRepository;
-        }
         public async Task<OperationLog> GetByIdAsync(Guid? id)
         {
             if (id is null)
@@ -66,35 +61,42 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> AddAsync(OperationLog entity)
         {
-            if (!await this._orderRepository.ExistsAsync(entity.IdOrder))
-            {
-                throw new InvalidOperationException(ORDER_DOES_NOT_EXIST);
-            }
-
-            if (!await OperationTypeExistsAsync(entity.OperationType))
-            {
-                throw new InvalidOperationException(OPERATION_TYPE_DOES_NOT_EXIST);
-            }
-
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            dbConnection.Open();
-
-            using IDbTransaction transaction = dbConnection.BeginTransaction();
-
             try
             {
-                var result = await dbConnection.ExecuteAsync(
-                    "INSERT INTO OperationLog (Id, OperationType, OperationDateTimeStart, OperationDateTimeEnd, IdOrder)" +
-                    "VALUES (@Id, @OperationType, @OperationDateTimeStart, @OperationDateTimeEnd, @IdOrder)",
-                    entity, transaction);
+                if (!await this._orderRepository.ExistsAsync(entity.IdOrder))
+                {
+                    throw new InvalidOperationException(ORDER_DOES_NOT_EXIST);
+                }
 
-                transaction.Commit();
-                return result;
+                if (!await OperationTypeExistsAsync(entity.OperationType))
+                {
+                    throw new InvalidOperationException(OPERATION_TYPE_DOES_NOT_EXIST);
+                }
+
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                dbConnection.Open();
+
+                using IDbTransaction transaction = dbConnection.BeginTransaction();
+
+                try
+                {
+                    var result = await dbConnection.ExecuteAsync(
+                        "INSERT INTO OperationLog (Id, OperationType, OperationDateTimeStart, OperationDateTimeEnd, IdOrder)" +
+                        "VALUES (@Id, @OperationType, @OperationDateTimeStart, @OperationDateTimeEnd, @IdOrder)",
+                        entity, transaction);
+
+                    transaction.Commit();
+                    return result;
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                transaction.Rollback();
-                throw;
+                throw new DatabaseOperationException("Error while adding an OperationLog to the database.", ex);
             }
         }
 
@@ -106,47 +108,60 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> UpdateAsync(OperationLog entity)
         {
-            OperationLog currentOperationLog;
             try
             {
-                currentOperationLog = await this.GetByIdAsync(entity.Id);
+                OperationLog currentOperationLog;
+                try
+                {
+                    currentOperationLog = await this.GetByIdAsync(entity.Id);
+
+                    if (currentOperationLog is null || !IsEntityChanged(currentOperationLog, entity))
+                    {
+                        return 0;
+                    }
+
+                    using IDbConnection dbConnection = this._context.CreateConnection();
+                    return await dbConnection.ExecuteAsync("UPDATE OperationLog SET OperationType = @OperationType, OperationDateTimeStart = @OperationDateTimeStart, OperationDateTimeEnd = @OperationDateTimeEnd, IdOrder = @IdOrder", entity);
+                }
+                catch (Exception ex)
+                    when (ex is ArgumentNullException
+                        || ex is NullReferenceException
+                        || ex is NotFoundException)
+                {
+                    throw;
+                }
+
             }
             catch (Exception ex)
-                when (ex is ArgumentNullException
-                    || ex is NullReferenceException
-                    || ex is NotFoundException)
             {
-                throw;
+                throw new DatabaseOperationException("Error while updating an OperationLog in the database.", ex);
             }
-
-            if (currentOperationLog != null && !IsEntityChanged(currentOperationLog, entity))
-            {
-                return 0;
-            }
-
-            using IDbConnection dbConnection = this._context.CreateConnection();
-
-            return await dbConnection.ExecuteAsync("UPDATE OperationLog SET OperationType = @OperationType, OperationDateTimeStart = @OperationDateTimeStart, OperationDateTimeEnd = @OperationDateTimeEnd, IdOrder = @IdOrder", entity);
         }
 
         public bool IsEntityChanged(OperationLog currentEntity, OperationLog entity)
         {
-            return currentEntity.OperationDateTimeStart != entity.OperationDateTimeStart
-                || currentEntity.OperationDateTimeEnd != entity.OperationDateTimeEnd
-                || currentEntity.OperationType != entity.OperationType
+            return currentEntity.OperationType != entity.OperationType
                 || currentEntity.IdOrder != entity.IdOrder;
         }
 
         public async Task<int> DeleteAsync(Guid id)
         {
-            using IDbConnection dbConnection = this._context.CreateConnection();
-
-            if (!await ExistsAsync(id))
+            try
             {
-                return 0;
-            }
 
-            return await dbConnection.ExecuteAsync($"DELETE FROM OperationLog WHERE Id = @Id", new { Id = id });
+                using IDbConnection dbConnection = this._context.CreateConnection();
+
+                if (!await ExistsAsync(id))
+                {
+                    return 0;
+                }
+
+                return await dbConnection.ExecuteAsync($"DELETE FROM OperationLog WHERE Id = @Id", new { Id = id });
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException("Error while deleting an OperationLog from the database.", ex);
+            }
         }
 
         public async Task<bool> ExistsAsync(Guid id)

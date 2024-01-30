@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
@@ -22,16 +23,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
+        public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0, int pageSize = 20)
         {
-			var model = new IndexViewModel<Disc>
+			var model = new GetAllViewModel<Disc>
 			{
 				SearchText = searchText,
 				SortOrder = sortOrder,
-				SortFieldName = sortField ?? "Id",
-				Skip = skip,
+                SortFieldName = sortField?.ToLowerInvariant() ?? "id",
+                Skip = skip,
 				CountItems = await this._discRepository.CountProcessedDataAsync(searchText),
-				PageSize = 20
+				PageSize = pageSize
 			};
 
 			return Ok(model.Items = await this._discRepository.GetProcessedAsync(

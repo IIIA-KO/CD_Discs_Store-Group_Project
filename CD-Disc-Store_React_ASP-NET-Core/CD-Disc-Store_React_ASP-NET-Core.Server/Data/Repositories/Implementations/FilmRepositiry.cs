@@ -1,22 +1,18 @@
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using Dapper;
-using Microsoft.Data.SqlClient;
 using System.Data;
+using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class FilmRepositiry : IFilmRepository
+    public class FilmRepositiry(IDapperContext context) : IFilmRepository
     {
-        private readonly IDapperContext _context;
+        private readonly IDapperContext _context = context;
         private const string FILM_NOT_FOUND_BY_ID_ERROR = "The film with specified Id was not found";
-
-        public FilmRepositiry(IDapperContext context)
-        {
-            this._context = context;
-        }
 
         public async Task<Film> GetByIdAsync(Guid? id)
         {
@@ -39,32 +35,46 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> AddAsync(Film entity)
         {
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("INSERT INTO Film (Id, [Name], Genre, Producer, MainRole, AgeLimit, CoverImagePath, ImageStorageName) VALUES (@Id, @Name, @Genre, @Producer, @MainRole, @AgeLimit, @CoverImagePath, @ImageStorageName)", entity);
+            try
+            {
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                return await dbConnection.ExecuteAsync("INSERT INTO Film (Id, [Name], Genre, Producer, MainRole, AgeLimit, CoverImagePath, ImageStorageName) VALUES (@Id, @Name, @Genre, @Producer, @MainRole, @AgeLimit, @CoverImagePath, @ImageStorageName)", entity);
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException("Error while adding a Film to the database.", ex);
+            }
         }
 
         public async Task<int> UpdateAsync(Film entity)
         {
-            Film currentFilm;
             try
             {
-                currentFilm = await this.GetByIdAsync(entity.Id);
+                Film currentFilm;
+                try
+                {
+                    currentFilm = await this.GetByIdAsync(entity.Id);
+                }
+                catch (Exception ex)
+                    when (ex is ArgumentNullException
+                        || ex is NullReferenceException
+                        || ex is NotFoundException)
+                {
+                    throw;
+                }
+
+                if (currentFilm != null && !IsEntityChanged(currentFilm, entity))
+                {
+                    return 0;
+                }
+
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                return await dbConnection.ExecuteAsync("UPDATE Film SET Name = @Name, Genre = @Genre, Producer = @Producer, MainRole = @MainRole, AgeLimit = @AgeLimit, CoverImagePath = @CoverImagePath, ImageStorageName = @ImageStorageName WHERE Id = @Id", entity);
             }
             catch (Exception ex)
-                when (ex is ArgumentNullException
-                    || ex is NullReferenceException
-                    || ex is NotFoundException)
             {
-                throw;
+                throw new DatabaseOperationException("Error while updating a Film in the database.", ex);
             }
-
-            if (currentFilm != null && !IsEntityChanged(currentFilm, entity))
-            {
-                return 0;
-            }
-
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("UPDATE Film SET Name = @Name, Genre = @Genre, Producer = @Producer, MainRole = @MainRole, AgeLimit = @AgeLimit, CoverImagePath = @CoverImagePath, ImageStorageName = @ImageStorageName WHERE Id = @Id", entity);
         }
 
         public bool IsEntityChanged(Film currentEntity, Film entity)
@@ -80,13 +90,20 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> DeleteAsync(Guid id)
         {
-            if (!await ExistsAsync(id))
+            try
             {
-                return 0;
-            }
+                if (!await ExistsAsync(id))
+                {
+                    return 0;
+                }
 
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync($"DELETE FROM Film WHERE Id = @Id", new { Id = id });
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                return await dbConnection.ExecuteAsync($"DELETE FROM Film WHERE Id = @Id", new { Id = id });
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException("Error while deleting a Film from the database.", ex);
+            }
         }
 
         public async Task<bool> ExistsAsync(Guid id)
@@ -97,7 +114,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<IReadOnlyList<Film>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
         {
-            if (string.IsNullOrEmpty(sortField) || !IndexViewModel<Film>.AllFieldNames.Contains(sortField))
+            if (string.IsNullOrEmpty(sortField)
+               || !GetAllViewModel<Film>.AllFieldNames.Any(f => string.Equals(f, sortField, StringComparison.OrdinalIgnoreCase)))
             {
                 return await GetAllAsync();
             }
@@ -127,14 +145,14 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         private string GetSearchConditions(string? searchText, DynamicParameters param)
         {
-            if (string.IsNullOrWhiteSpace(searchText))
+            if (string.IsNullOrEmpty(searchText))
             {
                 return "1=1";
             }
 
             var conditions = new List<string>();
 
-            foreach (var fieldName in IndexViewModel<Film>.AllFieldNames)
+            foreach (var fieldName in GetAllViewModel<Film>.AllFieldNames)
             {
                 var propertyType = typeof(Film).GetProperty(fieldName)?.PropertyType;
 

@@ -1,6 +1,7 @@
 using Dapper;
 using System.Data;
 using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
@@ -8,19 +9,13 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class OrderRepository : IOrderRepository
+    public class OrderRepository(IDapperContext context, IClientRepository clientRepository) : IOrderRepository
     {
-        private readonly IDapperContext _context;
-        private readonly IClientRepository _clientRepository;
+        private readonly IDapperContext _context = context;
+        private readonly IClientRepository _clientRepository = clientRepository;
 
         private const string ORDER_NOT_FOUND_BY_ID = "The Order with specified Id was not found.";
         private const string CLIENT_DOES_NOT_EXIST = "The Client with specified Id does not exist. Cannot Add Order";
-
-        public OrderRepository(IDapperContext context, IClientRepository clientRepository)
-        {
-            this._context = context;
-            this._clientRepository = clientRepository;
-        }
 
         public async Task<Order> GetByIdAsync(Guid? id)
         {
@@ -43,71 +38,92 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> AddAsync(Order entity)
         {
-            if (!await this._clientRepository.ExistsAsync(entity.IdClient))
-            {
-                throw new InvalidOperationException(CLIENT_DOES_NOT_EXIST);
-            }
-
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            dbConnection.Open();
-
-            using IDbTransaction transaction = dbConnection.BeginTransaction();
-
             try
             {
-                var result = await dbConnection.ExecuteAsync(
-                    "INSERT INTO [Order] (Id, OrderDateTime, IdClient) VALUES(@Id, @OrderDateTime, @IdClient)",
-                    entity, transaction);
+                if (!await this._clientRepository.ExistsAsync(entity.IdClient))
+                {
+                    throw new InvalidOperationException(CLIENT_DOES_NOT_EXIST);
+                }
 
-                transaction.Commit();
-                return result;
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                dbConnection.Open();
+
+                using IDbTransaction transaction = dbConnection.BeginTransaction();
+
+                try
+                {
+                    var result = await dbConnection.ExecuteAsync(
+                        "INSERT INTO [Order] (Id, OrderDateTime, IdClient) VALUES(@Id, @OrderDateTime, @IdClient)",
+                        entity, transaction);
+
+                    transaction.Commit();
+                    return result;
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                transaction.Rollback();
-                throw;
+                throw new DatabaseOperationException("Error while adding an Order to the database.", ex);
             }
         }
 
         public async Task<int> UpdateAsync(Order entity)
         {
-            Order currentOrder;
-
             try
             {
-                currentOrder = await this.GetByIdAsync(entity.Id);
+                Order currentOrder;
+                try
+                {
+                    currentOrder = await this.GetByIdAsync(entity.Id);
+
+                    if (currentOrder is null || !IsEntityChanged(currentOrder, entity))
+                    {
+                        return 0;
+                    }
+
+                    using IDbConnection dbConnection = this._context.CreateConnection();
+                    return await dbConnection.ExecuteAsync("UPDATE [Order] SET OrderDateTime = @OrderDateTime, IdClient = @IdClient WHERE Id = @Id", entity);
+                }
+                catch (Exception ex)
+                    when (ex is ArgumentNullException
+                        || ex is NullReferenceException
+                        || ex is NotFoundException)
+                {
+                    throw;
+                }
             }
             catch (Exception ex)
-                when (ex is ArgumentNullException
-                    || ex is NullReferenceException
-                    || ex is NotFoundException)
             {
-                throw;
+                throw new DatabaseOperationException("Error while updating an Order in the database.", ex);
             }
-
-            if (currentOrder != null && !IsEntityChanged(currentOrder, entity))
-            {
-                return 0;
-            }
-
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("UPDATE [Order] SET OrderDateTime = @OrderDateTime, IdClient = @IdClient WHERE Id = @Id", entity);
         }
         public bool IsEntityChanged(Order currentEntity, Order entity)
         {
-            return currentEntity.OrderDateTime != entity.OrderDateTime
+            return currentEntity.OperationDateTimeStart != entity.OperationDateTimeStart
+                || currentEntity.OperationDateTimeEnd != entity.OperationDateTimeEnd
                 || currentEntity.IdClient != entity.IdClient;
         }
 
         public async Task<int> DeleteAsync(Guid id)
         {
-            if (!await this.ExistsAsync(id))
+            try
             {
-                return 0;
-            }
+                if (!await this.ExistsAsync(id))
+                {
+                    return 0;
+                }
 
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("DELETE FROM [Order] WHERE Id = @Id", new { Id = id });
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                return await dbConnection.ExecuteAsync("DELETE FROM [Order] WHERE Id = @Id", new { Id = id });
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException("Error while deleting an Order from the database.", ex);
+            }
         }
 
         public async Task<bool> ExistsAsync(Guid id)
@@ -118,7 +134,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<IReadOnlyList<Order>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
         {
-            if (string.IsNullOrEmpty(sortField) || !IndexViewModel<Order>.AllFieldNames.Contains(sortField))
+            if (string.IsNullOrEmpty(sortField)
+                || !GetAllViewModel<Order>.AllFieldNames.Any(f => string.Equals(f, sortField, StringComparison.OrdinalIgnoreCase)))
             {
                 return await GetAllAsync();
             }
@@ -130,7 +147,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
             string sqlQuery = $"SELECT * FROM [Order] WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
 
-            using var dbConnection = this._context.CreateConnection();
+            using IDbConnection dbConnection = this._context.CreateConnection();
             var orders = await dbConnection.QueryAsync<Order>(sqlQuery, param);
 
             return orders?.ToList() ?? new List<Order>();
@@ -142,21 +159,21 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             string conditions = GetSearchConditions(searchText, param);
 
             string countQuery = $"SELECT COUNT(*) FROM [Order] WHERE ({conditions})";
-            
+
             using IDbConnection dbConnection = this._context.CreateConnection();
             return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);
         }
 
         private string GetSearchConditions(string? searchText, DynamicParameters param)
         {
-            if (string.IsNullOrWhiteSpace(searchText))
+            if (string.IsNullOrEmpty(searchText))
             {
                 return "1=1";
             }
 
             var conditions = new List<string>();
 
-            foreach (var fieldName in IndexViewModel<Order>.AllFieldNames)
+            foreach (var fieldName in GetAllViewModel<Order>.AllFieldNames)
             {
                 var propertyType = typeof(Order).GetProperty(fieldName)?.PropertyType;
 

@@ -19,28 +19,28 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options
 
         public string DefaultImageExtension => ".jpg";
 
-        public string DefaultDiscCoverImagePath
-            => CloudUrls.StorageUrl + DefaultImageStorageNames.Disc;
+        public string DefaultDiscCoverImagePath =>
+            CloudUrls.StorageUrl + DefaultImageStorageNames.Disc;
 
-        public string DefaultDiscImageStorageName
-            => DefaultImageStorageNames.Disc;
+        public string DefaultDiscImageStorageName =>
+            DefaultImageStorageNames.Disc;
 
-        public string FilmCoversPath
-            => CloudUrls.StorageUrl + CloudUrls.FilmCoversUrl;
+        public string FilmCoversPath =>
+            CloudUrls.StorageUrl + CloudUrls.FilmCoversUrl;
 
-        public string MusicCoversPath
-            => CloudUrls.StorageUrl + CloudUrls.MusicCoversUrl;
+        public string MusicCoversPath =>
+            CloudUrls.StorageUrl + CloudUrls.MusicCoversUrl;
 
-        public string GetDefaultFilmCoverImagePath(Film film)
-            => FilmCoversPath + GetDefaultFilmImageStorageName(film);
+        public string GetDefaultFilmCoverImagePath(Film film) =>
+            FilmCoversPath + GetDefaultFilmImageStorageName(film);
 
-        public string GetDefaultFilmImageStorageName(Film film)
-            => film.Genre + DefaultImageExtension;
+        public string GetDefaultFilmImageStorageName(Film film) =>
+            film.Genre + DefaultImageExtension;
 
-        public string GetDefaultMusicCoverImagePath(Music music)
-            => MusicCoversPath + GetDefaultMusicImageStorageName(music);
+        public string GetDefaultMusicCoverImagePath(Music music) =>
+            MusicCoversPath + GetDefaultMusicImageStorageName(music);
 
-        public string GetDefaultMusicImageStorageName(Music music)
-            => music.Genre + DefaultImageExtension;
+        public string GetDefaultMusicImageStorageName(Music music) =>
+            music.Genre + DefaultImageExtension;
     }
 }

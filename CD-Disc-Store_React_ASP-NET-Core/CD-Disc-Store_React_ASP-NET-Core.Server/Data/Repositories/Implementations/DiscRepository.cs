@@ -1,6 +1,7 @@
 using Dapper;
 using System.Data;
 using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
@@ -8,16 +9,11 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class DiscRepository : IDiscRepository
+    public class DiscRepository(IDapperContext context) : IDiscRepository
     {
-        private readonly IDapperContext _context;
+        private readonly IDapperContext _context = context;
 
         private const string DISC_NOT_FOUND_BY_ID_ERROR = "The disc with specified Id was not found";
-
-        public DiscRepository(IDapperContext context)
-        {
-            this._context = context;
-        }
 
         public async Task<Disc> GetByIdAsync(Guid? id)
         {
@@ -42,46 +38,48 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> AddAsync(Disc entity)
         {
-            using IDbConnection dbConnection = this._context.CreateConnection();
+            try
+            {
+                using IDbConnection dbConnection = this._context.CreateConnection();
 
-            return await dbConnection.ExecuteAsync("INSERT INTO Disc (Id, [Name], Price, LeftOnStock, Rating, CoverImagePath, ImageStorageName) VALUES (@Id, @Name, @Price, @LeftOnStock, @Rating, @CoverImagePath, @ImageStorageName)", entity);
+                return await dbConnection.ExecuteAsync("INSERT INTO Disc (Id, [Name], Price, LeftOnStock, Rating, CoverImagePath, ImageStorageName) VALUES (@Id, @Name, @Price, @LeftOnStock, @Rating, @CoverImagePath, @ImageStorageName)", entity);
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException("Error while adding a Disc to the database.", ex);
+            }
         }
 
         public async Task<int> UpdateAsync(Disc entity)
         {
-            Disc currentDisc;
             try
             {
-                currentDisc = await this.GetByIdAsync(entity.Id);
+                Disc currentDisc;
+                try
+                {
+                    currentDisc = await this.GetByIdAsync(entity.Id);
+
+                    if (currentDisc is null || !IsEntityChanged(currentDisc, entity))
+                    {
+                        return 0;
+                    }
+
+                    using IDbConnection dbConnection = this._context.CreateConnection();
+                    return await dbConnection.ExecuteAsync("UPDATE Disc SET Name = @Name, Price = @Price, LeftOnStock = @LeftOnStock, Rating = @Rating, CoverImagePath = @CoverImagePath, ImageStorageName = @ImageStorageName WHERE Id = @Id", entity);
+                }
+                catch (Exception ex)
+                    when (ex is ArgumentNullException
+                        || ex is NullReferenceException
+                        || ex is NotFoundException)
+                {
+                    throw;
+                }
+
             }
             catch (Exception ex)
-                when (ex is ArgumentNullException
-                    || ex is NullReferenceException
-                    || ex is NotFoundException)
             {
-                throw;
+                throw new DatabaseOperationException("Error while updating a Disc in the database.", ex);
             }
-
-            if (currentDisc != null && !IsEntityChanged(currentDisc, entity))
-            {
-                return 0;
-            }
-
-            using IDbConnection dbConnection = this._context.CreateConnection();
-
-            return await dbConnection.ExecuteAsync("UPDATE Disc SET Name = @Name, Price = @Price, LeftOnStock = @LeftOnStock, Rating = @Rating, CoverImagePath = @CoverImagePath, ImageStorageName = @ImageStorageName WHERE Id = @Id", entity);
-        }
-
-        public async Task<int> DeleteAsync(Guid id)
-        {
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync($"DELETE FROM Disc WHERE Id = @Id", new { Id = id });
-        }
-
-        public async Task<bool> ExistsAsync(Guid id)
-        {
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteScalarAsync<bool>("SELECT COUNT(1) FROM Disc WHERE Id = @Id", new { Id = id });
         }
 
         public bool IsEntityChanged(Disc currentEntity, Disc entity)
@@ -94,68 +92,94 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
                 || currentEntity.ImageStorageName != entity.ImageStorageName;
         }
 
-		public async Task<IReadOnlyList<Disc>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
-		{
-			if (string.IsNullOrEmpty(sortField) || !IndexViewModel<Film>.AllFieldNames.Contains(sortField))
-			{
-				return await GetAllAsync();
-			}
+        public async Task<int> DeleteAsync(Guid id)
+        {
+            try
+            {
+                if (!await ExistsAsync(id))
+                {
+                    return 0;
+                }
 
-			string sortOrderString = sortOrder == SortOrder.Descending ? "DESC" : "ASC";
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                return await dbConnection.ExecuteAsync($"DELETE FROM Disc WHERE Id = @Id", new { Id = id });
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException("Error while deleting a Disc from the database.", ex);
+            }
+        }
 
-			var param = new DynamicParameters();
-			string conditions = GetSearchConditions(searchText, param);
-			string sqlQuery = $"SELECT * FROM Disc WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+        public async Task<bool> ExistsAsync(Guid id)
+        {
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            return await dbConnection.ExecuteScalarAsync<bool>("SELECT COUNT(1) FROM Disc WHERE Id = @Id", new { Id = id });
+        }
 
-			using IDbConnection dbConnection = this._context.CreateConnection();
-			var discs = await dbConnection.QueryAsync<Disc>(sqlQuery, param);
 
-			return discs?.ToList() ?? new List<Disc>();
-		}
+        public async Task<IReadOnlyList<Disc>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
+        {
+            if (string.IsNullOrEmpty(sortField)
+                || !GetAllViewModel<Disc>.AllFieldNames.Any(f => string.Equals(f, sortField, StringComparison.OrdinalIgnoreCase)))
+            {
+                return await GetAllAsync();
+            }
 
-		public async Task<int> CountProcessedDataAsync(string? searchText)
-		{
-			var param = new DynamicParameters();
-			string conditions = GetSearchConditions(searchText, param);
+            string sortOrderString = sortOrder == SortOrder.Descending ? "DESC" : "ASC";
 
-			string countQuery = $"SELECT COUNT(*) FROM Disc WHERE ({conditions})";
+            var param = new DynamicParameters();
+            string conditions = GetSearchConditions(searchText, param);
+            string sqlQuery = $"SELECT * FROM Disc WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
 
-			using IDbConnection dbConnection = this._context.CreateConnection();
-			return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);
-		}
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            var discs = await dbConnection.QueryAsync<Disc>(sqlQuery, param);
 
-		private string GetSearchConditions(string? searchText, DynamicParameters param)
-		{
-			if (string.IsNullOrWhiteSpace(searchText))
-			{
-				return "1=1";
-			}
+            return discs?.ToList() ?? new List<Disc>();
+        }
 
-			var conditions = new List<string>();
+        public async Task<int> CountProcessedDataAsync(string? searchText)
+        {
+            var param = new DynamicParameters();
+            string conditions = GetSearchConditions(searchText, param);
 
-			foreach (var fieldName in IndexViewModel<Disc>.AllFieldNames)
-			{
-				var propertyType = typeof(Disc).GetProperty(fieldName)?.PropertyType;
+            string countQuery = $"SELECT COUNT(*) FROM Disc WHERE ({conditions})";
 
-				if (propertyType == typeof(string))
-				{
-					conditions.Add($"{fieldName} LIKE @searchText");
-					param.Add("@searchText", $"%{searchText}%");
-				}
-				else if (propertyType == typeof(int) && int.TryParse(searchText, out var parsedInt))
-				{
-					conditions.Add($"{fieldName} = @searchInt");
-					param.Add("@searchInt", parsedInt);
-				}
-				else if (propertyType == typeof(decimal) && int.TryParse(searchText, out var parsedDecimal))
-				{
-					conditions.Add($"{fieldName} = @searchDecimal");
-					param.Add("@searchDecimal", parsedDecimal);
-				}
-			}
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);
+        }
 
-			return string.Join(" OR ", conditions);
-		}
+        private string GetSearchConditions(string? searchText, DynamicParameters param)
+        {
+            if (string.IsNullOrEmpty(searchText))
+            {
+                return "1=1";
+            }
+
+            var conditions = new List<string>();
+
+            foreach (var fieldName in GetAllViewModel<Disc>.AllFieldNames)
+            {
+                var propertyType = typeof(Disc).GetProperty(fieldName)?.PropertyType;
+
+                if (propertyType == typeof(string))
+                {
+                    conditions.Add($"{fieldName} LIKE @searchText");
+                    param.Add("@searchText", $"%{searchText}%");
+                }
+                else if (propertyType == typeof(int) && int.TryParse(searchText, out var parsedInt))
+                {
+                    conditions.Add($"{fieldName} = @searchInt");
+                    param.Add("@searchInt", parsedInt);
+                }
+                else if (propertyType == typeof(decimal) && int.TryParse(searchText, out var parsedDecimal))
+                {
+                    conditions.Add($"{fieldName} = @searchDecimal");
+                    param.Add("@searchDecimal", parsedDecimal);
+                }
+            }
+
+            return string.Join(" OR ", conditions);
+        }
 
         public async Task<IReadOnlyList<Film>> GetFilmsOnDiscAsync(Guid? id)
         {

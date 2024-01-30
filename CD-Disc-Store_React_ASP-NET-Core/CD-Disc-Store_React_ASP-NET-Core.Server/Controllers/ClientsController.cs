@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
+using System.ComponentModel.DataAnnotations;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Atributes;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
@@ -24,11 +24,11 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpGet("GetAll")]
         public async Task<ActionResult<IReadOnlyList<Client>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            var model = new IndexViewModel<Client>
+            var model = new GetAllViewModel<Client>
             {
                 SearchText = searchText,
                 SortOrder = sortOrder,
-                SortFieldName = sortField ?? "Id",
+                SortFieldName = sortField ?? "id",
                 Skip = skip,
                 CountItems = await this._clientRepository.CountProcessedDataAsync(searchText),
                 PageSize = 20
@@ -64,7 +64,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpPost("Create")]
         public async Task<ActionResult<int>> Create([FromBody] Client client)
         {
-            if (!ModelState.IsValid && !ValidateContactDetails(client))
+            if (!ModelState.IsValid && !await ValidateContactDetails(client))
             {
                 return BadRequest(ModelState);
             }
@@ -109,17 +109,22 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             }
         }
 
-        private bool ValidateContactDetails(Client client)
+        private async Task<bool> ValidateContactDetails(Client client)
         {
-            if (!Regex.IsMatch(client.ContactPhone, PhoneValidation.PhonePattern))
+            var email = await this._clientRepository.GetEmailAsync(client);
+            var phone = await this._clientRepository.GetPhoneAsync(client);
+
+            var phoneAttribute = new PhoneAttribute();
+            if (!phoneAttribute.IsValid(phone))
             {
-                ModelState.AddModelError("Contact Phone", "Contact phone does not match the pattern: 'xx-xxx-xx-xx'");
+                ModelState.AddModelError("Contact Phone", "Invalid phone number format.");
                 return false;
             }
 
-            if (!Regex.IsMatch(client.ContactMail, EmailAddressValidation.EmailPattern))
+            var emailAttribute = new EmailAddressAttribute();
+            if (!emailAttribute.IsValid(email))
             {
-                ModelState.AddModelError("Contact Mail", "Contact mail does not match the pattern: 'user@example.com'");
+                ModelState.AddModelError("Contact Mail", "Invalid email format.");
                 return false;
             }
 

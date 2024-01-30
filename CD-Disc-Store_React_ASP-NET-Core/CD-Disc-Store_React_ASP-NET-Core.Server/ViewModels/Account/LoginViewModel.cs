@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels
+namespace CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels.Account
 {
     public class LoginViewModel
     {

@@ -1,6 +1,7 @@
 using Dapper;
 using System.Data;
 using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
@@ -8,22 +9,15 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class OrderItemRepository : IOrderItemRepository
+    public class OrderItemRepository(IDapperContext context, IOrderRepository orderRepository, IDiscRepository discRepository) : IOrderItemRepository
     {
-        private readonly IDapperContext _context;
-        private readonly IOrderRepository _orderRepository;
-        private readonly IDiscRepository _discRepository;
+        private readonly IDapperContext _context = context;
+        private readonly IOrderRepository _orderRepository = orderRepository;
+        private readonly IDiscRepository _discRepository = discRepository;
 
         private const string ORDER_ITEM_NOT_FOUND_BY_ID = "The order item with specified Id was not found.";
         private const string ORDER_DOES_NOT_EXIST = "The Order with specified Id does not exist. Cannot Add Order Item";
         private const string DISC_DOES_NOT_EXIST = "The Disc with specified Id does not exist. Cannot Add Order Item";
-
-        public OrderItemRepository(IDapperContext context, IOrderRepository orderRepository, IDiscRepository discRepository)
-        {
-            this._context = context;
-            this._orderRepository = orderRepository;
-            this._discRepository = discRepository;
-        }
 
         public async Task<OrderItem> GetByIdAsync(Guid? id)
         {
@@ -36,6 +30,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             var orderItem = await dbConnection.QueryFirstOrDefaultAsync<OrderItem>("SELECT * FROM OrderItem WHERE Id = @Id", new { Id = id });
             return orderItem ?? throw new NotFoundException();
         }
+
         public async Task<IReadOnlyList<OrderItem>> GetAllAsync()
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
@@ -45,60 +40,73 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> AddAsync(OrderItem entity)
         {
-            if (!await this._orderRepository.ExistsAsync(entity.IdOrder))
-            {
-                throw new InvalidOperationException(ORDER_DOES_NOT_EXIST);
-            }
-
-            if (!await this._discRepository.ExistsAsync(entity.IdDisc))
-            {
-                throw new InvalidOperationException(DISC_DOES_NOT_EXIST);
-            }
-
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            dbConnection.Open();
-
-            using IDbTransaction transaction = dbConnection.BeginTransaction();
-
             try
             {
-                var result = await dbConnection.ExecuteAsync(
-                    "INSERT INTO Orderitem (Id, IdOrder, IdDisc, Quantity) VALUES (@Id, @IdOrder, @IdDisc, @Quantity)",
-                    entity, transaction);
+                if (!await this._orderRepository.ExistsAsync(entity.IdOrder))
+                {
+                    throw new InvalidOperationException(ORDER_DOES_NOT_EXIST);
+                }
 
-                transaction.Commit();
-                return result;
+                if (!await this._discRepository.ExistsAsync(entity.IdDisc))
+                {
+                    throw new InvalidOperationException(DISC_DOES_NOT_EXIST);
+                }
+
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                dbConnection.Open();
+
+                using IDbTransaction transaction = dbConnection.BeginTransaction();
+
+                try
+                {
+                    var result = await dbConnection.ExecuteAsync(
+                        "INSERT INTO Orderitem (Id, IdOrder, IdDisc, Quantity) VALUES (@Id, @IdOrder, @IdDisc, @Quantity)",
+                        entity, transaction);
+
+                    transaction.Commit();
+                    return result;
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                transaction.Rollback();
-                throw;
+                throw new DatabaseOperationException("Error while adding an OrderItem to the database.", ex);
             }
         }
 
         public async Task<int> UpdateAsync(OrderItem entity)
         {
-            OrderItem currentItem;
-
             try
             {
-                currentItem = await this.GetByIdAsync(entity.Id);
+                OrderItem currentItem;
+                try
+                {
+                    currentItem = await this.GetByIdAsync(entity.Id);
+
+                    if (currentItem is null || !IsEntityChanged(currentItem, entity))
+                    {
+                        return 0;
+                    }
+
+                    using IDbConnection dbConnection = this._context.CreateConnection();
+                    return await dbConnection.ExecuteAsync("UPDATE OrderItem SET IdOrder = @IdOrder, IdDisc = @IdDisc, Quantity = @Quantity WHERE Id = @Id", entity);
+                }
+                catch (Exception ex)
+                    when (ex is ArgumentNullException
+                        || ex is NullReferenceException
+                        || ex is NotFoundException)
+                {
+                    throw;
+                }
             }
             catch (Exception ex)
-                when (ex is ArgumentNullException
-                    || ex is NullReferenceException
-                    || ex is NotFoundException)
             {
-                throw;
+                throw new DatabaseOperationException("Error while updating an OrderItem in the database.", ex);
             }
-
-            if (currentItem != null && !IsEntityChanged(currentItem, entity))
-            {
-                return 0;
-            }
-
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("UPDATE OrderItem SET IdOrder = @IdOrder, IdDisc = @IdDisc, Quantity = @Quantity WHERE Id = @Id", entity);
         }
         public bool IsEntityChanged(OrderItem currentEntity, OrderItem entity)
         {
@@ -109,13 +117,20 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<int> DeleteAsync(Guid id)
         {
-            if (!await this.ExistsAsync(id))
+            try
             {
-                return 0;
-            }
+                if (!await this.ExistsAsync(id))
+                {
+                    return 0;
+                }
 
-            using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.ExecuteAsync("DELETE FROM OrderItem WHERE Id = @Id", new { Id = id });
+                using IDbConnection dbConnection = this._context.CreateConnection();
+                return await dbConnection.ExecuteAsync("DELETE FROM OrderItem WHERE Id = @Id", new { Id = id });
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException("Error while deleting an OrderItem from the database.", ex);
+            }
         }
 
         public async Task<bool> ExistsAsync(Guid id)
@@ -126,7 +141,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
         public async Task<IReadOnlyList<OrderItem>> GetProcessedAsync(string? searchText, SortOrder sortOrder, string? sortField, int skip, int pageSize)
         {
-            if (string.IsNullOrEmpty(sortField) || !IndexViewModel<OrderItem>.AllFieldNames.Contains(sortField))
+            if (string.IsNullOrEmpty(sortField)
+                || !GetAllViewModel<OrderItem>.AllFieldNames.Any(f => string.Equals(f, sortField, StringComparison.OrdinalIgnoreCase)))
             {
                 return await GetAllAsync();
             }
@@ -135,6 +151,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
 
             var param = new DynamicParameters();
             string conditions = GetSearchConditions(searchText, param);
+
             string sqlQuery = $"SELECT * FROM OrderItem WHERE ({conditions}) ORDER BY {sortField} {sortOrderString} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
 
             using IDbConnection dbConnection = this._context.CreateConnection();
@@ -149,21 +166,21 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
             string conditions = GetSearchConditions(searchText, param);
 
             string countQuery = $"SELECT COUNT(*) FROM OrderItem WHERE ({conditions})";
-            
+
             using IDbConnection dbConnection = this._context.CreateConnection();
             return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);
         }
 
         private string GetSearchConditions(string? searchText, DynamicParameters param)
         {
-            if (string.IsNullOrWhiteSpace(searchText))
+            if (string.IsNullOrEmpty(searchText))
             {
                 return "1=1";
             }
 
             var conditions = new List<string>();
 
-            foreach (var fieldName in IndexViewModel<Order>.AllFieldNames)
+            foreach (var fieldName in GetAllViewModel<Order>.AllFieldNames)
             {
                 var propertyType = typeof(Order).GetProperty(fieldName)?.PropertyType;
 
