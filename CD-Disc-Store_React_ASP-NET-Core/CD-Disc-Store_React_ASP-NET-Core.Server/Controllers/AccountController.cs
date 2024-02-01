@@ -65,7 +65,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
                 var client = new Client
                 {
-                    //Id = Guid.NewGuid(),
                     UserId = user.Id,
                     Address = model.Address,
                     City = model.City,
