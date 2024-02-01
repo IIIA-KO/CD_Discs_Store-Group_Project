@@ -12,34 +12,23 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize(Roles = "Administrator")]
-    public class ClientsController : Controller
+    public class ClientsController(IClientRepository clientRepository) : Controller
     {
-        private readonly IClientRepository _clientRepository;
-
-        public ClientsController(IClientRepository clientRepository)
-        {
-            this._clientRepository = clientRepository;
-        }
+        private readonly IClientRepository _clientRepository = clientRepository;
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<IReadOnlyList<Client>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            var model = new GetAllViewModel<Client>
+            var model = new ProcessableViewModel<Client>
             {
                 SearchText = searchText,
                 SortOrder = sortOrder,
                 SortFieldName = sortField ?? "id",
                 Skip = skip,
-                CountItems = await this._clientRepository.CountProcessedDataAsync(searchText),
                 PageSize = 20
             };
 
-            return Ok(model.Items = await this._clientRepository.GetProcessedAsync(
-                        model.SearchText,
-                        model.SortOrder,
-                        model.SortFieldName,
-                        model.Skip,
-                        model.PageSize));
+            return Ok(await this._clientRepository.GetProcessedAsync(model));
         }
 
         [HttpGet("GetClient")]
@@ -55,7 +44,9 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 var client = await this._clientRepository.GetByIdAsync(id);
                 return Ok(client);
             }
-            catch (NotFoundException)
+            catch (Exception ex)
+                when (ex is ArgumentNullException
+                || ex is NotFoundException)
             {
                 return NotFound();
             }
@@ -71,8 +62,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
             try
             {
-                client.Id = Guid.NewGuid();
-
                 var result = await this._clientRepository.AddAsync(client);
 
                 return result == 1

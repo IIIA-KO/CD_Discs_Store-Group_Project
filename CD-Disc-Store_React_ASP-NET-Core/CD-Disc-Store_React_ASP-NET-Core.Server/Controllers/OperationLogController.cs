@@ -7,14 +7,9 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class OperationLogController : Controller
+    public class OperationLogController(IOperationLogRepository operationLogRepository) : Controller
     {
-        private readonly IOperationLogRepository _operationLogRepository;
-
-        public OperationLogController(IOperationLogRepository operationLogRepository)
-        {
-            this._operationLogRepository = operationLogRepository;
-        }
+        private readonly IOperationLogRepository _operationLogRepository = operationLogRepository;
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<IReadOnlyList<OperationLog>>> GetAll()
@@ -87,8 +82,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
             try
             {
-                operationLog.Id = Guid.NewGuid();
-
                 var result = await this._operationLogRepository.AddAsync(operationLog);
 
                 return result == 1

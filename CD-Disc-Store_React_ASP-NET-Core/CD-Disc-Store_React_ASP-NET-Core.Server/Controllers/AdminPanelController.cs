@@ -20,6 +20,36 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             this._userManager = userManager;
         }
 
+        [HttpPost("CreateEmployee")]
+        public async Task<IActionResult> CreateEmployee()
+        {
+            return Ok();
+        }
+
+        [HttpPost("CreateAdministrator")]
+        public async Task<IActionResult> CreateAdministrator()
+        {
+            return Ok();
+        }
+
+        [HttpPut("EditEmployee")]
+        public async Task<IActionResult> EditEmployee()
+        {
+            return Ok();
+        }
+
+        [HttpPut("EditAdministrator")]
+        public async Task<IActionResult> EditAdministrator()
+        {
+            return Ok();
+        }
+
+        [HttpDelete("DeleteUser/{id}")]
+        public async Task<IActionResult> DeleteUser(Guid? id)
+        {
+            return Ok();
+        }
+
         [HttpGet("Users")]
         public IActionResult GetUsers()
         {

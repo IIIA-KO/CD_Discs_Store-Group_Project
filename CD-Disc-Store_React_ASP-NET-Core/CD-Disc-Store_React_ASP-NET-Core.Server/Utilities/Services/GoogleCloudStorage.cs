@@ -1,10 +1,9 @@
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Atributes;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
 
-namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Implementations
+namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services
 {
     public class GoogleCloudStorage : ICloudStorage
     {
@@ -14,9 +13,9 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Implementat
 
         public GoogleCloudStorage(IConfiguration configuration)
         {
-            this._googleCredential = GoogleCredential.FromFile(configuration.GetValue<string>("GoogleCredentialFile"));
-            this._storageClient = StorageClient.Create(this._googleCredential);
-            this._bucketName = configuration.GetValue<string>("GoogleCloudStorageBucket")
+            _googleCredential = GoogleCredential.FromFile(configuration.GetValue<string>("GoogleCredentialFile"));
+            _storageClient = StorageClient.Create(_googleCredential);
+            _bucketName = configuration.GetValue<string>("GoogleCloudStorageBucket")
                 ?? throw new NullReferenceException("Unable to get Google Cloud Storage Bucket name.");
         }
 
@@ -36,7 +35,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Implementat
             var fileNameForStorage = FormFileName(entity.Name, entity.ImageFile.FileName);
 
             await entity.ImageFile.CopyToAsync(memorySream);
-            var dataObject = await this._storageClient.UploadObjectAsync(this._bucketName, fileNameForStorage, null, memorySream);
+            var dataObject = await _storageClient.UploadObjectAsync(_bucketName, fileNameForStorage, null, memorySream);
 
             entity.CoverImagePath = dataObject.MediaLink;
             entity.ImageStorageName = fileNameForStorage;
@@ -46,7 +45,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Implementat
 
         private bool IsValidImage(IFormFile imageFile)
         {
-            if (imageFile.Length > (1 * 1024 * 1024))
+            if (imageFile.Length > 1 * 1024 * 1024)
             {
                 return false;
             }
@@ -70,7 +69,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Implementat
 
         public async Task DeleteFileAsync(string fileNameForStorage)
         {
-            await this._storageClient.DeleteObjectAsync(this._bucketName, fileNameForStorage);
+            await _storageClient.DeleteObjectAsync(_bucketName, fileNameForStorage);
         }
     }
 }

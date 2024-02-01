@@ -3,44 +3,32 @@ using Microsoft.Data.SqlClient;
 using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class DiscsController : Controller
+    public class DiscsController(IDiscRepository discRepository, ICloudStorage cloudStorage) : Controller
     {
-        private readonly IDiscRepository _discRepository;
-        private readonly ICloudStorage _cloudStorage;
-
-        public DiscsController(IDiscRepository discRepository, ICloudStorage cloudStorage)
-        {
-            this._discRepository = discRepository;
-            this._cloudStorage = cloudStorage;
-        }
+        private readonly IDiscRepository _discRepository = discRepository;
+        private readonly ICloudStorage _cloudStorage = cloudStorage;
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0, int pageSize = 20)
         {
-			var model = new GetAllViewModel<Disc>
+			var model = new ProcessableViewModel<Disc>
 			{
 				SearchText = searchText,
 				SortOrder = sortOrder,
                 SortFieldName = sortField?.ToLowerInvariant() ?? "id",
                 Skip = skip,
-				CountItems = await this._discRepository.CountProcessedDataAsync(searchText),
 				PageSize = pageSize
 			};
 
-			return Ok(model.Items = await this._discRepository.GetProcessedAsync(
-						model.SearchText,
-						model.SortOrder,
-						model.SortFieldName,
-						model.Skip,
-						model.PageSize));
+			return Ok(await this._discRepository.GetProcessedAsync(model));
 		}
 
         [HttpGet("GetDisc")]
@@ -84,8 +72,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     disc.CoverImagePath = storageOptions.DefaultDiscCoverImagePath;
                     disc.ImageStorageName = storageOptions.DefaultDiscImageStorageName;
                 }
-
-                disc.Id = Guid.NewGuid();
 
                 var result = await this._discRepository.AddAsync(disc);
                 return result == 1
@@ -137,7 +123,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPut("Edit")]
-        public async Task<ActionResult<int>> Edit(Guid? existingDiscId, [Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath,ImageFile,ImageStorageName")] Disc changed)
+        public async Task<ActionResult<int>> Edit(Guid? existingDiscId, [Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath,ImageFile,ImageStorageName")] Disc changed, StorageOptions storageOptions)
         {
             if (!existingDiscId.HasValue || changed == null)
             {
@@ -157,6 +143,11 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 if (changed.ImageFile != null)
                 {
                     if (existing.ImageStorageName != null)
+                    {
+                        await this._cloudStorage.DeleteFileAsync(existing.ImageStorageName);
+                    }
+
+                    if (!string.Equals(existing.ImageStorageName, storageOptions.DefaultDiscImageStorageName, StringComparison.OrdinalIgnoreCase))
                     {
                         await this._cloudStorage.DeleteFileAsync(existing.ImageStorageName);
                     }

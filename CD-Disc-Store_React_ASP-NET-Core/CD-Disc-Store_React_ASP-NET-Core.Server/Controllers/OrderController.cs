@@ -9,34 +9,23 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class OrderController : Controller
+    public class OrderController(IOrderRepository orderRepository) : Controller
     {
-        private readonly IOrderRepository _orderRepository;
-
-        public OrderController(IOrderRepository orderRepository)
-        {
-            this._orderRepository = orderRepository;
-        }
+        private readonly IOrderRepository _orderRepository = orderRepository;
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<IReadOnlyList<Order>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            var model = new GetAllViewModel<Order>
+            var model = new ProcessableViewModel<Order>
             {
                 SearchText = searchText,
                 SortOrder = sortOrder,
                 SortFieldName = sortField?.ToLowerInvariant() ?? "id",
                 Skip = skip,
-                CountItems = await this._orderRepository.CountProcessedDataAsync(searchText),
                 PageSize = 20
             };
 
-            return Ok(model.Items = await this._orderRepository.GetProcessedAsync(
-                        model.SearchText,
-                        model.SortOrder,
-                        model.SortFieldName,
-                        model.Skip,
-                        model.PageSize));
+            return Ok(model);
         }
 
         [HttpGet("GetOrder")]
@@ -68,8 +57,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
             try
             {
-                order.Id = Guid.NewGuid();
-
                 var result = await this._orderRepository.AddAsync(order);
                 if (result == 1)
                 {

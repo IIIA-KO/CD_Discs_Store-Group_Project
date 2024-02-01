@@ -7,7 +7,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models
 	public class OperationLog
 	{
 		[Key]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
 		[Required(ErrorMessage = "The \"Operation Type\" field is required")]
 		public Guid OperationType { get; set; }

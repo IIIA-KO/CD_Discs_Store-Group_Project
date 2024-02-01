@@ -7,7 +7,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models
     public class Client
     {
         [Key]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [StringLength(450)]
         [Required(ErrorMessage = "The \"User Id\" field is required")]
