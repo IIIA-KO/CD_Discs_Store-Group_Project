@@ -5,6 +5,7 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
@@ -22,6 +23,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetAll")]
+        [Authorize(Roles = "Administrator, Employee, Client")]
         public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
 			var model = new IndexViewModel<Disc>
@@ -43,6 +45,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 		}
 
         [HttpGet("GetDisc")]
+        [Authorize(Roles = "Administrator, Employee, Client")]
         public async Task<ActionResult<Disc>> GetDisc(Guid? id)
         {
             if (id == null)
@@ -62,6 +65,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPost("Create")]
+        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> Create([Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath,ImageStorageName,ImageFile")] Disc disc, StorageOptions storageOptions)
         {
             if (!ModelState.IsValid)
@@ -98,6 +102,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetFilmsOnDisc/{id}")]
+        [Authorize(Roles = "Administrator, Employee, Client")]
         public async Task<ActionResult<IReadOnlyList<Film>>> GetFilms(Guid? id)
         {
             if (id == null || !await this._discRepository.ExistsAsync(id.Value))
@@ -117,6 +122,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetMusicOnDisc/{id}")]
+        [Authorize(Roles = "Administrator, Employee, Client")]
         public async Task<ActionResult<IReadOnlyList<Music>>> GetMusic(Guid? id)
         {
             if (id == null || !await this._discRepository.ExistsAsync(id.Value))
@@ -136,6 +142,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPut("Edit")]
+        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> Edit(Guid? existingDiscId, [Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath,ImageFile,ImageStorageName")] Disc changed)
         {
             if (!existingDiscId.HasValue || changed == null)
@@ -178,6 +185,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpDelete("Delete")]
+        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id, StorageOptions storageOptions)
         {
             try
