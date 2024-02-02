@@ -11,7 +11,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = "Administrator, Employee")]
     public class ClientsController(IClientRepository clientRepository) : Controller
     {
         private readonly IClientRepository _clientRepository = clientRepository;

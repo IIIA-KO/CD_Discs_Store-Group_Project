@@ -6,6 +6,8 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
@@ -17,6 +19,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         private readonly ICloudStorage _cloudStorage = cloudStorage;
 
         [HttpGet("GetAll")]
+        [Authorize(Roles = "Administrator, Employee, Client")]
         public async Task<ActionResult<IReadOnlyList<Film>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
             var model = new ProcessableViewModel<Film>
@@ -32,6 +35,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetFilm")]
+        [Authorize(Roles = "Administrator, Employee, Client")]
         public async Task<ActionResult<Film>> GetFilm(Guid? id)
         {
             if (id == null)
@@ -52,6 +56,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPost("Create")]
+        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> Create([Bind("Id,Name,Genre,Producer,MainRole,AgeLimit,CoverImagePath,ImageStorageName,ImageFile")] Film film, StorageOptions storageOptions)
         {
             if (!ModelState.IsValid)
@@ -87,6 +92,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPut("Edit")]
+        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> Edit(Guid? existingFilmId, [Bind("Id,Name,Genre,Producer,MainRole,AgeLimit,CoverImagePath,ImageStorageName,ImageFile")] Film changed, StorageOptions storageOptions)
         {
             if (!existingFilmId.HasValue || changed == null)
@@ -129,6 +135,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpDelete("Delete")]
+        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id, StorageOptions storageOptions)
         {
             try
