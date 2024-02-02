@@ -1,6 +1,5 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Atributes;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models
 {
@@ -8,15 +7,11 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models
     public class Client
     {
         [Key]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
-        [StringLength(50)]
-        [Required(ErrorMessage = "The \"First name\" field is required")]
-        public string FirstName { get; set; } = default!;
-
-        [StringLength(50)]
-        [Required(ErrorMessage = "The \"Last name\" field is required")]
-        public string LastName { get; set; } = default!;
+        [StringLength(450)]
+        [Required(ErrorMessage = "The \"User Id\" field is required")]
+        public string UserId { get; set; } = default!;
 
         [StringLength(100)]
         [Required(ErrorMessage = "The \"Address\" field is required")]
@@ -25,16 +20,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models
         [StringLength(50)]
         [Required(ErrorMessage = "The \"City\" field is required")]
         public string City { get; set; } = default!;
-
-        [StringLength(20)]
-        [Required(ErrorMessage = "The \"Contact phone\" field is required")]
-        [PhoneValidation]
-        public string ContactPhone { get; set; } = default!;
-
-        [StringLength(100)]
-        [Required(ErrorMessage = "The \"Contact mail\" field is required")]
-        [EmailAddressValidation]
-        public string ContactMail { get; set; } = default!;
 
         [Required(ErrorMessage = "The \"Birth day\" field is required")]
         public DateTime BirthDay { get; set; }

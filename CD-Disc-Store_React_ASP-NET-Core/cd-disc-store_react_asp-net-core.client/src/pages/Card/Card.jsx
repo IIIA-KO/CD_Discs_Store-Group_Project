@@ -10,7 +10,7 @@ export default function Card({ item }) {
         <div >
             <div className="image" onClick={() => { getDetails(item.id) }}>
                 <div className="genre">{item.genre}</div>
-                <img src="https://w0.peakpx.com/wallpaper/627/792/HD-wallpaper-no-black-blank.jpg" alt="img" />
+                <img src={ item.coverImagePath } alt="img" />
             </div>
             <div className="infoFilm">
                 <div className='name'>{item.name}</div>

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
@@ -11,37 +13,25 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class FilmController : Controller
+    public class FilmController(IFilmRepository filmRepository, ICloudStorage cloudStorage) : Controller
     {
-        private readonly IFilmRepository _filmRepository;
-        private readonly ICloudStorage _cloudStorage;
-
-        public FilmController(IFilmRepository filmRepository, ICloudStorage cloudStorage)
-        {
-            this._filmRepository = filmRepository;
-            this._cloudStorage = cloudStorage;
-        }
+        private readonly IFilmRepository _filmRepository = filmRepository;
+        private readonly ICloudStorage _cloudStorage = cloudStorage;
 
         [HttpGet("GetAll")]
         [Authorize(Roles = "Administrator, Employee, Client")]
         public async Task<ActionResult<IReadOnlyList<Film>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            var model = new IndexViewModel<Film>
+            var model = new ProcessableViewModel<Film>
             {
                 SearchText = searchText,
                 SortOrder = sortOrder,
-                SortFieldName = sortField ?? "Id",
+                SortFieldName = sortField?.ToLowerInvariant() ?? "id",
                 Skip = skip,
-                CountItems = await this._filmRepository.CountProcessedDataAsync(searchText),
                 PageSize = 20
             };
 
-            return Ok(model.Items = await this._filmRepository.GetProcessedAsync(
-                        model.SearchText,
-                        model.SortOrder,
-                        model.SortFieldName,
-                        model.Skip,
-                        model.PageSize));
+            return Ok(await this._filmRepository.GetProcessedAsync(model));
         }
 
         [HttpGet("GetFilm")]
@@ -89,8 +79,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     film.ImageStorageName = storageOptions.GetDefaultFilmImageStorageName(film);
                 }
 
-                film.Id = Guid.NewGuid();
-
                 var result = await this._filmRepository.AddAsync(film);
 
                 return result == 1
@@ -105,7 +93,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
         [HttpPut("Edit")]
         [Authorize(Roles = "Administrator, Employee")]
-        public async Task<ActionResult<int>> Edit(Guid? existingFilmId, [Bind("Id,Name,Genre,Producer,MainRole,AgeLimit,CoverImagePath,ImageStorageName,ImageFile")] Film changed)
+        public async Task<ActionResult<int>> Edit(Guid? existingFilmId, [Bind("Id,Name,Genre,Producer,MainRole,AgeLimit,CoverImagePath,ImageStorageName,ImageFile")] Film changed, StorageOptions storageOptions)
         {
             if (!existingFilmId.HasValue || changed == null)
             {
@@ -124,7 +112,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
                 if (changed.ImageFile != null)
                 {
-                    if (existing.ImageStorageName != null)
+                    if (!string.Equals(existing.ImageStorageName, storageOptions.GetDefaultFilmImageStorageName(existing), StringComparison.OrdinalIgnoreCase))
                     {
                         await this._cloudStorage.DeleteFileAsync(existing.ImageStorageName);
                     }

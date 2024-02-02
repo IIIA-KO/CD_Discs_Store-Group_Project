@@ -1,9 +1,11 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
-using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
+using System.ComponentModel.DataAnnotations;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels.Account;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
@@ -11,15 +13,18 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
     [Route("[controller]")]
     public class AccountController : Controller
     {
-        private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IClientRepository _clientRepository;
 
-        public AccountController(ApplicationDbContext context, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+        public AccountController(
+            UserManager<IdentityUser> userManager,
+            SignInManager<IdentityUser> signInManager,
+            IClientRepository clientRepository)
         {
-            this._context = context;
             this._userManager = userManager;
             this._signInManager = signInManager;
+            this._clientRepository = clientRepository;
         }
 
         [HttpPost("Register")]
@@ -37,7 +42,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     return BadRequest("Passwords do not match.");
                 }
 
-                var user = new IdentityUser { UserName = model.UserName, Email = model.Email };
+                var user = new IdentityUser { UserName = model.UserName, Email = model.Email, PhoneNumber = model.PhoneNumber, PhoneNumberConfirmed = true };
 
                 var result = await this._userManager.CreateAsync(user, model.Password);
 
@@ -57,12 +62,81 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 await this._userManager.AddToRoleAsync(user, "Client");
 
                 await this._signInManager.SignInAsync(user, false);
+
+                var client = new Client
+                {
+                    UserId = user.Id,
+                    Address = model.Address,
+                    City = model.City,
+                    BirthDay = model.BirthDay,
+                    MarriedStatus = model.MarriedStatus,
+                    Sex = model.Sex,
+                    HasChild = model.HasChild,
+                };
+
+                await this._clientRepository.AddAsync(client);
+
                 return Ok(new { Message = "Registration successful", UserName = user.UserName, Email = user.Email });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"An error occurred during registration. {ex.Message}");
             }
+        }
+
+        [HttpPut("Edit")]
+        public async Task<IActionResult> Edit([FromBody] EditViewModel model)
+        {
+            try
+            {
+                var user = await this._userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+
+                if (!ValidateUserInfo(model))
+                {
+                    return BadRequest(ModelState);
+                }
+
+                user.UserName = model.UserName;
+                user.Email = model.Email;
+                user.PhoneNumber = model.PhoneNumber;
+                var result = await this._userManager.UpdateAsync(user);
+
+                return result.Succeeded
+                    ? Ok()
+                    : BadRequest(result.Errors);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred during changing username. {ex.Message}");
+            }
+        }
+
+        private bool ValidateUserInfo(EditViewModel model)
+        {
+            if (string.IsNullOrEmpty(model.UserName) || model.UserName.Length > 50)
+            {
+                return false;
+            }
+
+            var phoneAttribute = new PhoneAttribute();
+            if (!phoneAttribute.IsValid(model.PhoneNumber))
+            {
+                ModelState.AddModelError("Contact Phone", "Invalid phone number format.");
+                return false;
+            }
+
+            var emailAttribute = new EmailAddressAttribute();
+            if (!emailAttribute.IsValid(model.Email))
+            {
+                ModelState.AddModelError("Contact Mail", "Invalid email format.");
+                return false;
+            }
+
+            return true;
         }
 
         [HttpPost("Login")]
@@ -102,82 +176,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             }
         }
 
-        [HttpGet("Users")]
-        [Authorize(Roles = "Administrator")]
-        public IActionResult GetUsers()
-        {
-            var users = this._userManager.Users.ToList();
-            return Ok(users);
-        }
-
-        [HttpGet("Roles")]
-        [Authorize(Roles = "Administrator")]
-        public IActionResult GetRoles()
-        {
-            var roles = this._context.Roles.Select(r => r.Name).ToList();
-            return Ok(roles);
-        }
-
-        [HttpGet("GetUserRoles/{userId}")]
-        [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> GetUserRoles(string userId)
-        {
-            var user = await this._userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                return NotFound("User not found");
-            }
-
-            var userRoles = await this._userManager.GetRolesAsync(user);
-            return Ok(userRoles);
-        }
-
-        [HttpPost("AssignRoles/{userId}")]
-        [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> AssignRoles(string userId, [FromBody] List<string> roles)
-        {
-            try
-            {
-                var requestingUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-                if (userId == requestingUserId)
-                {
-                    return BadRequest("You are not allowed to manipulate your own account.");
-                }
-
-                var user = await this._userManager.FindByIdAsync(userId);
-                if (user == null)
-                {
-                    return NotFound("User not found");
-                }
-
-                var userRoles = await this._userManager.GetRolesAsync(user);
-                if (userRoles.Contains("Administrator"))
-                {
-                    return BadRequest("You cannot change roles of other Administrators");
-                }
-
-                await this._userManager.RemoveFromRolesAsync(user, userRoles);
-
-                if (roles == null || roles.Count == 0)
-                {
-                    roles = new List<string> { "Client" };
-                }
-
-                var result = await this._userManager.AddToRolesAsync(user, roles);
-
-                return result.Succeeded
-                    ? Ok($"Roles assigned successfully for user {user.UserName}")
-                    : BadRequest(result.Errors);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred during role assignment. {ex.Message}");
-            }
-        }
-
         [HttpDelete("DeleteAccount")]
-        [Authorize]
+        [Authorize(Roles = "Client")]
         public async Task<IActionResult> DeleteAccount()
         {
             try
@@ -187,6 +187,9 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 {
                     return NotFound("User not found");
                 }
+
+                var relatedClient = await this._clientRepository.GetByUserIdAsync(user.Id);
+                await this._clientRepository.DeleteAsync(relatedClient.Id);
 
                 var result = await this._userManager.DeleteAsync(user);
 
@@ -199,6 +202,10 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 {
                     return BadRequest(result.Errors);
                 }
+            }
+            catch (DatabaseOperationException ex)
+            {
+                return NotFound(ex.Message);
             }
             catch (Exception ex)
             {
