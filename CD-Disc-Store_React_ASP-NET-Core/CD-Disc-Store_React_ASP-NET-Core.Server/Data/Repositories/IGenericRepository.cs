@@ -1,5 +1,3 @@
-using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
-
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories
 {
     public interface IGenericRepository<T> where T : class
