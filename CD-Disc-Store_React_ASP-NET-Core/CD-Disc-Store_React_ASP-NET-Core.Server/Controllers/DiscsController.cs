@@ -6,7 +6,6 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
@@ -28,7 +27,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 				SortOrder = sortOrder,
                 SortFieldName = sortField?.ToLowerInvariant() ?? "id",
                 Skip = skip,
-				PageSize = pageSize
+				PageSize = 20
 			};
 
 			return Ok(await this._discRepository.GetProcessedAsync(model));
