@@ -12,7 +12,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         private readonly ICloudStorage _cloudStorage = cloudStorage;
 
         [HttpGet("GetAll")]
-        [Authorize(Roles = "Administrator, Employee, Client")]
+        
         public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
             var model = new Processable<Disc>
@@ -28,7 +28,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetDisc")]
-        [Authorize(Roles = "Administrator, Employee, Client")]
+        
         public async Task<ActionResult<Disc>> GetDisc(Guid? id)
         {
             if (id == null)
