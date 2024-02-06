@@ -1,48 +1,41 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.Interfaces;
+
+using Microsoft.AspNetCore.Authorization;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class DiscsController : Controller
+    public class DiscsController(IDiscRepository discRepository, ICloudStorage cloudStorage) : Controller
     {
-        private readonly IDiscRepository _discRepository;
-        private readonly ICloudStorage _cloudStorage;
-
-        public DiscsController(IDiscRepository discRepository, ICloudStorage cloudStorage)
-        {
-            this._discRepository = discRepository;
-            this._cloudStorage = cloudStorage;
-        }
+        private readonly IDiscRepository _discRepository = discRepository;
+        private readonly ICloudStorage _cloudStorage = cloudStorage;
 
         [HttpGet("GetAll")]
+        
         public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-			var model = new IndexViewModel<Disc>
+			var model = new ProcessableViewModel<Disc>
 			{
 				SearchText = searchText,
 				SortOrder = sortOrder,
-				SortFieldName = sortField ?? "Id",
-				Skip = skip,
-				CountItems = await this._discRepository.CountProcessedDataAsync(searchText),
+                SortFieldName = sortField?.ToLowerInvariant() ?? "id",
+                Skip = skip,
 				PageSize = 20
 			};
 
-			return Ok(model.Items = await this._discRepository.GetProcessedAsync(
-						model.SearchText,
-						model.SortOrder,
-						model.SortFieldName,
-						model.Skip,
-						model.PageSize));
+			return Ok(await this._discRepository.GetProcessedAsync(model));
 		}
 
         [HttpGet("GetDisc")]
+        
         public async Task<ActionResult<Disc>> GetDisc(Guid? id)
         {
             if (id == null)
@@ -62,6 +55,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPost("Create")]
+        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> Create([Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath,ImageStorageName,ImageFile")] Disc disc, StorageOptions storageOptions)
         {
             if (!ModelState.IsValid)
@@ -84,8 +78,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     disc.ImageStorageName = storageOptions.DefaultDiscImageStorageName;
                 }
 
-                disc.Id = Guid.NewGuid();
-
                 var result = await this._discRepository.AddAsync(disc);
                 return result == 1
                     ? Ok(new { Message = "Disc created successfully", MusicId = disc.Id })
@@ -98,6 +90,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetFilmsOnDisc/{id}")]
+        [Authorize(Roles = "Administrator, Employee, Client")]
         public async Task<ActionResult<IReadOnlyList<Film>>> GetFilms(Guid? id)
         {
             if (id == null || !await this._discRepository.ExistsAsync(id.Value))
@@ -117,6 +110,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetMusicOnDisc/{id}")]
+        [Authorize(Roles = "Administrator, Employee, Client")]
         public async Task<ActionResult<IReadOnlyList<Music>>> GetMusic(Guid? id)
         {
             if (id == null || !await this._discRepository.ExistsAsync(id.Value))
@@ -136,7 +130,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPut("Edit")]
-        public async Task<ActionResult<int>> Edit(Guid? existingDiscId, [Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath,ImageFile,ImageStorageName")] Disc changed)
+        [Authorize(Roles = "Administrator, Employee")]
+        public async Task<ActionResult<int>> Edit(Guid? existingDiscId, [Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath,ImageFile,ImageStorageName")] Disc changed, StorageOptions storageOptions)
         {
             if (!existingDiscId.HasValue || changed == null)
             {
@@ -160,6 +155,11 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                         await this._cloudStorage.DeleteFileAsync(existing.ImageStorageName);
                     }
 
+                    if (!string.Equals(existing.ImageStorageName, storageOptions.DefaultDiscImageStorageName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        await this._cloudStorage.DeleteFileAsync(existing.ImageStorageName);
+                    }
+
                     await this._cloudStorage.UploadFileAsync(changed);
                 }
 
@@ -178,6 +178,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpDelete("Delete")]
+        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id, StorageOptions storageOptions)
         {
             try
