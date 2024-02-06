@@ -1,4 +1,4 @@
-header {
+/* header {
     background-color: #292A2D;
 }
 
@@ -82,4 +82,118 @@ header button:hover a {
 .btn {
     background-color: #fff;
     color: #292A2D;
+} */
+
+header {
+    background-color: #292A2D;
+}
+
+.header {
+    overflow: hidden;
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.logo p {
+    font-size: 2rem;
+    margin-bottom: 10px; /* Add margin for better spacing */
+    color: #fff;
+}
+.logo a{
+    color: #fff;
+}
+nav a {
+    font-size: 1.2rem;
+    color: #fff;
+    text-decoration: none;
+}
+
+button a {
+    font-size: 1rem;
+}
+
+.left_side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+nav ul {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center; /* Center the text for small screens */
+}
+
+ul li {
+    list-style: none;
+}
+
+header ul li:hover {
+    text-decoration: underline;
+    color: white;
+}
+
+.CartAndProfile {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+header button {
+    background: none;
+    border: 1px solid white;
+    padding: 10px 20px;
+    max-width: 100%; /* Make buttons responsive */
+    
+}
+header button a{
+    color: #fff;
+}
+
+header button:hover {
+    background-color: #fff;
+}
+
+header button:hover a {
+    color: #292A2D;
+}
+
+.active {
+    text-decoration: underline;
+}
+
+/* Media Query for Tablet Screens */
+@media screen and (min-width: 768px) {
+    .header {
+        flex-direction: row;
+    }
+
+    .left_side {
+        flex-direction: row;
+        align-items: center;
+        gap: 5rem;
+    }
+
+    nav ul {
+        flex-direction: row;
+        text-align: initial; /* Reset text alignment */
+    }
+
+    .CartAndProfile {
+        flex-direction: row;
+        gap: 40px;
+    }
+}
+
+/* Media Query for Larger Screens */
+@media screen and (min-width: 1200px) {
+    .wrapper {
+        width: 80%; /* Adjust the width of the wrapper for larger screens */
+        margin: 0 auto; /* Center the content */
+    }
 }
