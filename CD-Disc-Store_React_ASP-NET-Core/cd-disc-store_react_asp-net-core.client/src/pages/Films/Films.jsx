@@ -15,23 +15,23 @@ const Films = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch(`https://localhost:7117/Film/GetAll?skip=${currentPage * 10}`);
-      const data = await response.json();
-      setItems(data);
-    };
-    
-    fetchData();
-  }, [currentPage]);
+        const response = await fetch(`https://localhost:7117/Film/GetAll?skip=${currentPage * 10}`);
+        const data = await response.json();
+        setItems(data);
+      };
+
+      fetchData();
+    }, [currentPage]);
 
   const handlePageClick = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  
-   return(
+
+  return (
     <div>
-      <MovieSearch movies={items}  />
-      {/*<CardList data={items} />*/}
+      <MovieSearch movies={items} />
+      {/* {<CardList data={items} />} */}
       {/* Пагинация */}
       <Pagination
         currentPage={currentPage}
