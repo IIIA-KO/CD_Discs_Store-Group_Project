@@ -12,9 +12,6 @@ export default function Card({ item }) {
                 <div className="genre">{item.genre}</div>
 
                 <img src={item.coverImagePath} alt="img" />
-
-                <img src={item.coverImagePath} alt="img" />
-
             </div>
             <div className="infoFilm">
                 <div className='name'>{item.name}</div>
