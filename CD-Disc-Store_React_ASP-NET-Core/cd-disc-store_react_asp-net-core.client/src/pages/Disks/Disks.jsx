@@ -6,7 +6,7 @@ const Disks = () => {
 
   useEffect(() => {
 
-    fetch("https://localhost:7117/Discs/GetAll").then(res => res.json()).then(data => setItems(data)).catch(error => console.error(error));
+    fetch("https://localhost:7117/Film/GetAll?skip=0").then(res => res.json()).then(data => setItems(data)).catch(error => console.error(error));
   }, [])
   return (
     <div>

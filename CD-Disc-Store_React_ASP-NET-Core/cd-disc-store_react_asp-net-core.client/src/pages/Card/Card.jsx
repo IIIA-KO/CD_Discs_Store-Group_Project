@@ -13,7 +13,7 @@ export default function Card({ item }) {
 
                 <img src={item.coverImagePath} alt="img" />
 
-                <img src={item.coverImagePath} alt="img" />
+                
 
             </div>
             <div className="infoFilm">
