@@ -75,7 +75,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPut("Edit")]
-        public async Task<IActionResult> Edit([FromBody] EditViewModel model)
+        public async Task<IActionResult> Edit([FromBody] UserBaseDto model)
         {
             try
             {
@@ -105,7 +105,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             }
         }
 
-        private bool ValidateUserInfo(EditViewModel model)
+        private bool ValidateUserInfo(UserBaseDto model)
         {
             if (string.IsNullOrEmpty(model.UserName) || model.UserName.Length > 50)
             {

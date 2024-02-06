@@ -5,7 +5,7 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class OperationLogRepository(IDapperContext context, ProcessableViewModelProcessor<OperationLog> processor)
+    public class OperationLogRepository(IDapperContext context, Processor<OperationLog> processor)
         : GenericRepository<OperationLog>(context, processor), IOperationLogRepository
     {
         public async Task<IReadOnlyList<OperationLog>> GetByClientIdAsync(Guid? id)

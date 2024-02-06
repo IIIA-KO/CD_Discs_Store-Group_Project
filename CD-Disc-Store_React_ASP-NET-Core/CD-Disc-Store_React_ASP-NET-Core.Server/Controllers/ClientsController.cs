@@ -15,7 +15,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpGet("GetAll")]
         public async Task<ActionResult<IReadOnlyList<Client>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            var model = new ProcessableViewModel<Client>
+            var model = new Processable<Client>
             {
                 SearchText = searchText,
                 SortOrder = sortOrder,

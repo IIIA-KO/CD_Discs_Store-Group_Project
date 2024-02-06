@@ -15,7 +15,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [Authorize(Roles = "Administrator, Employee, Client")]
         public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            var model = new ProcessableViewModel<Disc>
+            var model = new Processable<Disc>
             {
                 SearchText = searchText,
                 SortOrder = sortOrder,

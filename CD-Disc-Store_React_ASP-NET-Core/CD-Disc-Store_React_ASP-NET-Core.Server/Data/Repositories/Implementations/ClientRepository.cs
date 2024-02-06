@@ -5,7 +5,7 @@ using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class ClientRepository(IDapperContext context, ProcessableViewModelProcessor<Client> processor)
+    public class ClientRepository(IDapperContext context, Processor<Client> processor)
         : GenericRepository<Client>(context, processor), IClientRepository
     {
         public async Task<Client> GetByUserIdAsync(string userId)

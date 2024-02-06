@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels.Account
+namespace CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels
 {
-    public class EditViewModel
+    public class UserBaseDto
     {
 
         [StringLength(50)]

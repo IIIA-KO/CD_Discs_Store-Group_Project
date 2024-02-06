@@ -12,7 +12,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpGet("GetAll")]
         public async Task<ActionResult<IReadOnlyList<OrderItem>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
-            var model = new ProcessableViewModel<OrderItem>
+            var model = new Processable<OrderItem>
             {
                 SearchText = searchText,
                 SortOrder = sortOrder,
@@ -21,7 +21,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 PageSize = 20
             };
 
-            return Ok(model);
+            return Ok(await this._orderItemRepository.GetProcessedAsync(model));
         }
 
         [HttpGet("GetOrderItem")]

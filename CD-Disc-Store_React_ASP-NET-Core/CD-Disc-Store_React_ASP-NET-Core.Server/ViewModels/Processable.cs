@@ -3,7 +3,7 @@ using CdDiskStoreAspNetCore.Models.Interfaces.Data;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels
 {
-    public class ProcessableViewModel<T> : IDataProcessable where T : class
+    public class Processable<T> : IDataProcessable where T : class
     {
         public static IReadOnlyList<string> AllFieldNames { get; private set; } =
            typeof(T).GetProperties()
