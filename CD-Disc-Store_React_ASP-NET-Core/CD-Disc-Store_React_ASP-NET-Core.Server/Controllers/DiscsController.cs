@@ -6,6 +6,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Roles = "Administrator,Employee")]
     public class DiscsController(IDiscRepository discRepository, ICloudStorage cloudStorage) : Controller
     {
         private readonly IDiscRepository _discRepository = discRepository;
@@ -48,7 +49,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPost("Create")]
-        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> Create([Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath,ImageStorageName,ImageFile")] Disc disc, StorageOptions storageOptions)
         {
             if (!ModelState.IsValid)
@@ -123,7 +123,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPut("Edit")]
-        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> Edit(Guid? existingDiscId, [Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath,ImageFile,ImageStorageName")] Disc changed, StorageOptions storageOptions)
         {
             if (!existingDiscId.HasValue || changed == null)
@@ -171,7 +170,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpDelete("Delete")]
-        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id, StorageOptions storageOptions)
         {
             try
