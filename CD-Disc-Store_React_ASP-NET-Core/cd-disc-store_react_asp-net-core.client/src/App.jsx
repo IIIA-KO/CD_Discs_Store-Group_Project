@@ -16,6 +16,8 @@ import AdminDisks from './pages/AdminDisks/AdminDisks';
 import AdminDisksAdd from './pages/AdminDisks/AdminDisksAdd';
 import AdminDisksDelete from './pages/AdminDisks/AdminDisksDelete';
 import AdminDisksEdit from './pages/AdminDisks/AdminDisksEdit';
+import AdminFilms from './pages/AdminFilms/AdminFilms';
+import AdminFilmsAdd from './pages/AdminFilms/AdminFilmsAdd';
 
 
 function App() {
@@ -37,6 +39,8 @@ function App() {
                 <Route path='/adminpanel/disks/add' element={<AdminDisksAdd />} />
                 <Route path='/adminpanel/disks/delete/:id' element={<AdminDisksDelete />} />
                 <Route path='/adminpanel/disks/edit/:id' element={<AdminDisksEdit />} />
+                <Route path='/adminpanel/films' element={<AdminFilms />} />
+                <Route path='/adminpanel/films/add' element={<AdminFilmsAdd />} />
 
             </Routes>
             </main>
