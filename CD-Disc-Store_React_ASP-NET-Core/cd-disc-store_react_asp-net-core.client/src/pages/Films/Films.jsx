@@ -35,7 +35,7 @@ const Films = () => {
       {/* Пагинация */}
       <Pagination
         currentPage={currentPage}
-        totalPages={4}
+        totalPages={20}
         onPageClick={handlePageClick}
       />
     </div>

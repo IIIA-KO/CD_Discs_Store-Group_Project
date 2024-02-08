@@ -12,7 +12,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         private readonly ICloudStorage _cloudStorage = cloudStorage;
 
         [HttpGet("GetAll")]
-        
+        [AllowAnonymous]
         public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
         {
             var model = new Processable<Disc>
@@ -28,7 +28,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetDisc")]
-        
+        [AllowAnonymous]
         public async Task<ActionResult<Disc>> GetDisc(Guid? id)
         {
             if (id == null)
@@ -83,7 +83,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetFilmsOnDisc/{id}")]
-        [Authorize(Roles = "Administrator, Employee, Client")]
+        [AllowAnonymous]
         public async Task<ActionResult<IReadOnlyList<Film>>> GetFilms(Guid? id)
         {
             if (id == null || !await this._discRepository.ExistsAsync(id.Value))
@@ -103,7 +103,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetMusicOnDisc/{id}")]
-        [Authorize(Roles = "Administrator, Employee, Client")]
+        [AllowAnonymous]
         public async Task<ActionResult<IReadOnlyList<Music>>> GetMusic(Guid? id)
         {
             if (id == null || !await this._discRepository.ExistsAsync(id.Value))
