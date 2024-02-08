@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminPanelHeader from '../../AdminPanelHeader/AdminPanelHeader'
 
 
-const AdminFilms = () => {
+const AdminMusic = () => {
     const [items, setItems] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     let navigate=useNavigate();
@@ -19,7 +19,7 @@ const AdminFilms = () => {
         } else{
             document.getElementById("leftarrow").disabled = false;
         }
-        let fetchurl = "https://localhost:7117/Film/GetAll?skip=" + pageNumber * itemsPerPage;
+        let fetchurl = "https://localhost:7117/Music/GetAll?skip=" + pageNumber * itemsPerPage;
         fetch(fetchurl)
         .then(res => res.json())
         .then(data => {
@@ -47,17 +47,16 @@ const AdminFilms = () => {
         <>
             <AdminPanelHeader />
             <div className='admindisks'>
-                <h1>Films</h1>
-                <button className='add' onClick={() => window.location.href = "/adminpanel/films/add"}>Add</button>
+                <h1>Music</h1>
+                <button className='add' onClick={() => window.location.href = "/adminpanel/music/add"}>Add</button>
                 <table className='table'>
                     <thead>
                         <tr>
                             <th scope="col">ID</th>
                             <th scope="col">Name</th>
                             <th scope="col">Genre</th>
-                            <th scope="col">Producer</th>
-                            <th scope="col">Main Role</th>
-                            <th scope="col">Age Limit</th>
+                            <th scope="col">Artist</th>
+                            <th scope="col">Language</th>
                             <th scope="col">Cover Image</th>
                             <th scope="col">Image name</th>
                             <th scope="col">Edit</th>
@@ -70,13 +69,12 @@ const AdminFilms = () => {
                                 <th scope="row">{item.id}</th>
                                 <td>{item.name}</td>
                                 <td>{item.genre}</td>
-                                <td>{item.producer}</td>
-                                <td>{item.mainRole}</td>
-                                <td>{item.ageLimit}</td>
+                                <td>{item.artist}</td>
+                                <td>{item.language}</td>
                                 <td>{item.coverImagePath}</td>
                                 <td>{item.imageStorageName}</td>
-                                <td><button className='edit'onClick={() => window.location.href="/adminpanel/films/edit/id=" + item.id}>Edit</button></td>
-                                <td><button className='delete' onClick={() => window.location.href="/adminpanel/films/delete/id=" + item.id}>Delete</button></td>
+                                <td><button className='edit'onClick={() => window.location.href="/adminpanel/music/edit/id=" + item.id}>Edit</button></td>
+                                <td><button className='delete' onClick={() => window.location.href="/adminpanel/music/delete/id=" + item.id}>Delete</button></td>
                             </tr>
                         ))}
                     </tbody>
@@ -90,4 +88,4 @@ const AdminFilms = () => {
     )
 }
 
-export default AdminFilms
+export default AdminMusic

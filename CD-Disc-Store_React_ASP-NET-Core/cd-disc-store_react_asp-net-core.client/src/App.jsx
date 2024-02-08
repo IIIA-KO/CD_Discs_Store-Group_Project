@@ -18,6 +18,12 @@ import AdminDisksDelete from './pages/AdminDisks/AdminDisksDelete';
 import AdminDisksEdit from './pages/AdminDisks/AdminDisksEdit';
 import AdminFilms from './pages/AdminFilms/AdminFilms';
 import AdminFilmsAdd from './pages/AdminFilms/AdminFilmsAdd';
+import AdminFilmsDelete from './pages/AdminFilms/AdminFilmsDelete';
+import AdminFilmsEdit from './pages/AdminFilms/AdminFilmsEdit';
+import AdminMusic from './pages/AdminMusic/AdminMusic';
+import AdminMusicAdd from './pages/AdminMusic/AdminMusicAdd';
+import AdminMusicDelete from './pages/AdminMusic/AdminMusicDelete';
+import AdminMusicEdit from './pages/AdminMusic/AdminMusicEdit';
 
 
 function App() {
@@ -41,6 +47,12 @@ function App() {
                 <Route path='/adminpanel/disks/edit/:id' element={<AdminDisksEdit />} />
                 <Route path='/adminpanel/films' element={<AdminFilms />} />
                 <Route path='/adminpanel/films/add' element={<AdminFilmsAdd />} />
+                <Route path='/adminpanel/films/delete/:id' element={<AdminFilmsDelete/>} />
+                <Route path='/adminpanel/films/edit/:id' element={<AdminFilmsEdit />} />
+                <Route path='/adminpanel/music' element={<AdminMusic />} />
+                <Route path='/adminpanel/music/add' element={<AdminMusicAdd/>} />
+                <Route path='/adminpanel/music/delete/:id' element={<AdminMusicDelete />} />
+                <Route path='/adminpanel/music/edit/:id' element={<AdminMusicEdit />} />
 
             </Routes>
             </main>
