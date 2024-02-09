@@ -5,16 +5,15 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
     public class CartController(IOrderItemRepository orderItemRepository, IOrderRepository orderRepository, IOperationLogRepository operationLogRepository) : Controller
     {
         private readonly IOrderItemRepository _orderItemRepository = orderItemRepository;
         private readonly IOrderRepository _orderRepository = orderRepository;
         private readonly IOperationLogRepository _operationLogRepository = operationLogRepository;
 
-        [HttpGet("CreateOrder")]
+        [HttpPost("CreateOrder")]
         [Authorize]
-        public async Task<IActionResult> CreateOrder(OrderItem[] orderItems, Order[] orders, OperationLog[] operationLog)
+        public async Task<IActionResult> CreateOrder([FromBody] CartOrderViewModel model)
         {
             try
             {
@@ -22,7 +21,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 int ordersAdded = 0;
                 int operationLogsAdded = 0;
 
-                foreach (var orderItem in orderItems)
+                foreach (var orderItem in model.OrderItems)
                 {
                     if (await _orderItemRepository.AddAsync(orderItem) == 1)
                     {
@@ -30,7 +29,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     }
                 }
 
-                foreach (var order in orders)
+                foreach (var order in model.Orders)
                 {
                     if (await _orderRepository.AddAsync(order) == 1)
                     {
@@ -38,7 +37,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     }
                 }
 
-                foreach (var operation in operationLog)
+                foreach (var operation in model.OperationLogs)
                 {
                     if (await _operationLogRepository.AddAsync(operation) == 1)
                     {
@@ -65,7 +64,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             }
         }
 
-        [HttpPost("DeleteOrder")]
+        [HttpDelete("DeleteOrder")]
         [Authorize(Roles = "Administrator,Employee")]
         public async Task<IActionResult> DeleteOrder(Guid? id)
         {
