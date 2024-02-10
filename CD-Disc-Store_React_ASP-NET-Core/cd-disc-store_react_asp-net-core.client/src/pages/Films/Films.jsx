@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import FilmSearch from '../../FilmSearch/FilmSearch';
 import Pagination from '../../Pagination/Pagination';
 
+
+
 const Films = () => {
   const [films, setFilms] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 12;
+
 
   useEffect(() => {
     const fetchMovies = async () => {

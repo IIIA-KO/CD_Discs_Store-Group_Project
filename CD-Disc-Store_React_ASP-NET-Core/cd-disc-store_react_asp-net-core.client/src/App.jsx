@@ -10,6 +10,9 @@ import {BrowserRouter,Routes,Route,Link} from 'react-router-dom'
 import Header from './Header/Header';
 import Footer from './Footer/Footer';
 import FilmDetails from './pages/FilmDetails/FilmDetails'
+
+import Authentication from './Authentication/Authentication';
+
 import MusicDetails from './pages/MusicDetails/MusicDetails'
 import AdminPanel from './pages/AdminPanel/AdminPanel';
 import AdminDisks from './pages/AdminDisks/AdminDisks';
@@ -24,6 +27,7 @@ import AdminMusic from './pages/AdminMusic/AdminMusic';
 import AdminMusicAdd from './pages/AdminMusic/AdminMusicAdd';
 import AdminMusicDelete from './pages/AdminMusic/AdminMusicDelete';
 import AdminMusicEdit from './pages/AdminMusic/AdminMusicEdit';
+
 
 
 import { useState } from 'react';
@@ -43,6 +47,9 @@ function App() {
                 <Route exact path="/music/:id" element={<MusicDetails/>} />
                 <Route path='/cart' element={<Cart items={cartItems} />} />
                 <Route path='/profile' element={<Profile />} />
+
+                <Route path="/authentication" element={<Authentication />} />
+
                 <Route path='/adminpanel' element={<AdminPanel />} />
                 <Route path='/adminpanel/disks' element={<AdminDisks />} />
                 <Route path='/adminpanel/disks/add' element={<AdminDisksAdd />} />
@@ -56,6 +63,7 @@ function App() {
                 <Route path='/adminpanel/music/add' element={<AdminMusicAdd/>} />
                 <Route path='/adminpanel/music/delete/:id' element={<AdminMusicDelete />} />
                 <Route path='/adminpanel/music/edit/:id' element={<AdminMusicEdit />} />
+
 
             </Routes>
             </main>
