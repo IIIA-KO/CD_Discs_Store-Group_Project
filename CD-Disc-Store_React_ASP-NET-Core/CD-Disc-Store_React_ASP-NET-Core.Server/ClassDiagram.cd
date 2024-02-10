@@ -1,0 +1,521 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Controllers.AccountController">
+    <Position X="16.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAhAAIAAAAAAAAAABAAAIAAAABAAACAAAQAQAAAAA=</HashCode>
+      <FileName>Controllers\AccountController.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_clientRepository" />
+      <Field Name="_signInManager" />
+      <Field Name="_userManager" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Controllers.AdminPanelController">
+    <Position X="13.5" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>IAAQBAAAAAAABADEAAAAgAAAAAABABAACAAAAAAAAAA=</HashCode>
+      <FileName>Controllers\AdminPanelController.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_userManager" />
+      <Field Name="_context" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Controllers.CartController" Collapsed="true">
+    <Position X="30.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Controllers\CartController.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Controllers.ClientsController">
+    <Position X="19.5" Y="3.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIAAAAAACAAAAAAAAAAAAAAEACAgQAAABAAAA=</HashCode>
+      <FileName>Controllers\ClientsController.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_clientRepository" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Controllers.DiscsController">
+    <Position X="19" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAAAAAAACAAAAQAAAAAAAAAEAiAgACAAAIAAA=</HashCode>
+      <FileName>Controllers\DiscsController.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_cloudStorage" />
+      <Field Name="_discRepository" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Controllers.FilmController">
+    <Position X="21.5" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAACAAAAAAAAAAAAAAEACAgQCAAAAAAE=</HashCode>
+      <FileName>Controllers\FilmController.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_cloudStorage" />
+      <Field Name="_filmRepository" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Controllers.MusicController">
+    <Position X="8.5" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AECAAAAAAgAAAACAAAAAAAAAAAAAAEACAgACAAAAAAA=</HashCode>
+      <FileName>Controllers\MusicController.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_cloudStorage" />
+      <Field Name="_musicRepository" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Controllers.OperationLogController">
+    <Position X="2.5" Y="10" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAACAAAAAAAAAAAAAAECCAgAAAAAEAgA=</HashCode>
+      <FileName>Controllers\OperationLogController.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_operationLogRepository" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Controllers.OrderController">
+    <Position X="11.25" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQAAAAAAAACAAAAAAAAAAAAAAEACAgAAABAAAAA=</HashCode>
+      <FileName>Controllers\OrderController.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_orderRepository" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Controllers.OrderItemController">
+    <Position X="5.5" Y="7" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAAAAACAAAAgAAAAAAAAAEACAgAAAAAAAAA=</HashCode>
+      <FileName>Controllers\OrderItemController.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_orderItemRepository" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts.ApplicationDbContext">
+    <Position X="10" Y="0.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Contexts\ApplicationDbContext.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts.DapperContext" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="34" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAIAAEAAAAAAAA=</HashCode>
+      <FileName>Data\Contexts\DapperContext.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models.Client" Collapsed="true">
+    <Position X="32.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACQAAAAAAABAAIAAAAAAgAAAAIAAACAAQAAAAAAAA=</HashCode>
+      <FileName>Data\Models\Client.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models.Disc" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="28.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAACAAAAgQAAAAAAAAAAABQAAAAAAAEgAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Models\Disc.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models.Film" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="30.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAACAAAAgAAAAAAAEAIAABQAAAAQAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Models\Film.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models.Music" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="30.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAACAAAAiAAAAAAAAAIAABQAAIAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Models\Music.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models.OperationLog" Collapsed="true">
+    <Position X="34" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABACAAAAAA=</HashCode>
+      <FileName>Data\Models\OperationLog.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models.Order" Collapsed="true">
+    <Position X="27" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAAAAAAAEAAgAAAAAAABAAAAAA=</HashCode>
+      <FileName>Data\Models\Order.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models.OrderItem" Collapsed="true">
+    <Position X="28.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAiAAAAAA=</HashCode>
+      <FileName>Data\Models\OrderItem.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations.ClientRepository">
+    <Position X="22" Y="22" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAAgAEAAABAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Implementations\ClientRepository.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations.DiscRepository">
+    <Position X="6" Y="22" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAACAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Implementations\DiscRepository.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations.FilmRepository">
+    <Position X="8.75" Y="22" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Implementations\FilmRepository.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations.MusicRepository">
+    <Position X="11.25" Y="22" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Implementations\MusicRepository.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations.OperationLogRepository" Collapsed="true">
+    <Position X="13.75" Y="22" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Implementations\OperationLogRepository.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations.OrderItemRepository" Collapsed="true">
+    <Position X="16.75" Y="22" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Implementations\OrderItemRepository.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations.OrderRepository" Collapsed="true">
+    <Position X="19.5" Y="22" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Implementations\OrderRepository.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.GenericRepository&lt;TEntity&gt;">
+    <Position X="13.75" Y="17.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAEAAIAAAAAABAIAAAAEAAEAAAAAAAhAAAECAAgAoIA=</HashCode>
+      <FileName>Data\Repositories\GenericRepository.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Migrations.Initial" Collapsed="true">
+    <Position X="34" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAI=</HashCode>
+      <FileName>Migrations\20231227134630_Initial.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Migrations.ApplicationDbContextModelSnapshot" Collapsed="true">
+    <Position X="28.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAA=</HashCode>
+      <FileName>Migrations\ApplicationDbContextModelSnapshot.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Atributes.AllowedImageExtensions" Collapsed="true">
+    <Position X="27" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAABAAAAQA=</HashCode>
+      <FileName>Utilities\Atributes\AllowedImageExtensions.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Atributes.MaxFileSize" Collapsed="true">
+    <Position X="28.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAQA=</HashCode>
+      <FileName>Utilities\Atributes\MaxFileSize.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions.DatabaseOperationException" Collapsed="true">
+    <Position X="27" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Exceptions\DatabaseOperationException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions.NotFoundException" Collapsed="true">
+    <Position X="32.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Exceptions\NotFoundException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions.ServiceRegistration" Collapsed="true">
+    <Position X="27" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIEAAAAAAAAAgAAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Exstensions\ServiceRegistration.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options.StorageOptions" Collapsed="true">
+    <Position X="28.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAABIABAAAAACAAAABACIAAAARAAAAAgAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Options\StorageOptions.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors.ClientProcessor">
+    <Position X="13.75" Y="15.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Processors\ClientProcessor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors.DiscProcessor">
+    <Position X="16.25" Y="15.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Processors\DiscProcessor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors.FilmProcessor">
+    <Position X="18.75" Y="15.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Processors\FilmProcessor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors.MusicProcessor">
+    <Position X="21.25" Y="15.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Processors\MusicProcessor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors.OperationLogProcessor">
+    <Position X="6" Y="15.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Processors\OperationLogProcessor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors.OrderItemProcessor">
+    <Position X="8.75" Y="15.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Processors\OrderItemProcessor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors.OrderProcessor">
+    <Position X="11.25" Y="15.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Processors\OrderProcessor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors.Processor&lt;T&gt;">
+    <Position X="13.5" Y="13.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACAIAAAAAAAAAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>Utilities\Processors\Processor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.GoogleCloudStorage" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="32.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAQAAIBAAAAAgAQAAAAMAAAAAA=</HashCode>
+      <FileName>Utilities\Services\GoogleCloudStorage.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels.Account.LoginViewModel" Collapsed="true">
+    <Position X="27" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAQAAAAAAAAA=</HashCode>
+      <FileName>ViewModels\Account\LoginViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels.Account.RegisterViewModel" Collapsed="true">
+    <Position X="34" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAACAABAAIAAAAQAAAAAAIAAACAQQAAAAAIAA=</HashCode>
+      <FileName>ViewModels\Account\RegisterViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels.Processable&lt;T&gt;" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="30.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAQAAACAAAAAAAAACCAAAEAAAAAAAAEAAAEAA=</HashCode>
+      <FileName>ViewModels\Processable.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels.UserBaseDto">
+    <Position X="14.5" Y="23.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAAAQAAAAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>ViewModels\UserBaseDto.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels.UserBaseWithPasswordDto">
+    <Position X="14.25" Y="25.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAA=</HashCode>
+      <FileName>ViewModels\UserBaseWithPasswordDto.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CD_Disc_Store_React_ASP_NET_Core.Server.Program" Collapsed="true">
+    <Position X="32.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microsoft.AspNetCore.Identity.SignInManager&lt;TUser&gt;" Collapsed="true">
+    <Position X="16.5" Y="2.75" Width="2" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="Microsoft.AspNetCore.Identity.UserManager&lt;TUser&gt;" Collapsed="true">
+    <Position X="13.75" Y="4.75" Width="1.75" />
+    <TypeIdentifier />
+  </Class>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts.IDapperContext" Collapsed="true">
+    <Position X="27" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Contexts\IDapperContext.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CdDiskStoreAspNetCore.Models.Interfaces.Data.IDataProcessable" Collapsed="true">
+    <Position X="5.25" Y="19.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Interfaces\IDataProcessable.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CdDiskStoreAspNetCore.Models.Interfaces.Data.IFilterable" Collapsed="true">
+    <Position X="28.75" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAACAAAAAABAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Interfaces\IFilterable.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CdDiskStoreAspNetCore.Models.Interfaces.Data.IPaginable">
+    <Position X="5.25" Y="17.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAEAA=</HashCode>
+      <FileName>Data\Interfaces\IPaginable.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CdDiskStoreAspNetCore.Models.Interfaces.Data.ISortable">
+    <Position X="24.5" Y="17.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Interfaces\ISortable.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Interfaces.IImage" Collapsed="true">
+    <Position X="30.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAgAAAAAAAAAAAABQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Interfaces\IImage.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Interfaces.ISearchable">
+    <Position X="8.25" Y="17.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Interfaces\ISearchable.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces.IClientRepository">
+    <Position X="16.75" Y="10.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAAgAEAAABAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Interfaces\IClientRepository.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces.IDiscRepository">
+    <Position X="19.25" Y="10.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAACAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Interfaces\IDiscRepository.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces.IFilmRepository">
+    <Position X="22" Y="10.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Interfaces\IFilmRepository.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces.IMusicRepository">
+    <Position X="6" Y="10.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Interfaces\IMusicRepository.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces.IOperationLogRepository">
+    <Position X="8.5" Y="10.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Interfaces\IOperationLogRepository.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces.IOrderItemRepository">
+    <Position X="11.5" Y="10.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Interfaces\IOrderItemRepository.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces.IOrderRepository" Collapsed="true">
+    <Position X="14.25" Y="10.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Repositories\Interfaces\IOrderRepository.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.IGenericRepository&lt;T&gt;">
+    <Position X="13.75" Y="7.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAEAAIAAAAAAAAIAAAAAAAEAAAAAAAgAAAAAAAAAoIA=</HashCode>
+      <FileName>Data\Repositories\IGenericRepository.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services.ICloudStorage">
+    <Position X="16.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAIBAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utilities\Services\ICloudStorage.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

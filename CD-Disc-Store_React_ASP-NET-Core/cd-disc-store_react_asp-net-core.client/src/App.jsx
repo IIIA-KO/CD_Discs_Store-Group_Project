@@ -15,7 +15,7 @@ import FilmDetails from './pages/FilmDetails/FilmDetails'
 import { useState } from 'react';
 
 function App() {
-    const [cartItems, setCartItems] = useState([]); // Инициализация состояния корзины
+    const [cartItems, setCartItems] = useState([]);
     return (
         <>
             <Header />

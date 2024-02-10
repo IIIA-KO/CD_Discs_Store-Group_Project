@@ -1,55 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import "./MusicSearch.css"
 import CardListMusic from '../pages/CardListMusic/CardListMusic';
-const MusicSearch = ({ musics }) => {
-    const [search, setSearch] = useState('');
+
+const MusicSearch = ({ musics, currentPage, itemsPerPage }) => {
+  const [searchText, setSearchText] = useState('');
   const [genreFilter, setGenreFilter] = useState('');
-  const [filteredMusics, setFilteredMuiscs] = useState([]);
+  const [genres, setGenres] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
-    const filtered = musics.filter((music) => {
-      const titleMatch = music.name.toLowerCase().includes(search.toLowerCase());
-      const genreMatch = music.genre.toLowerCase().includes(genreFilter.toLowerCase());
-      return titleMatch && genreMatch;
-    });
-    setFilteredMuiscs(filtered);
-  }, [search, genreFilter, musics]);
+    const fetchGenres = async () => {
+      try {
+        const response = await fetch(`https://localhost:7117/Music/GetGenres`);
+        const data = await response.json();
+        setGenres(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchGenres();
+  }, [searchText]);
+
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      try {
+        const response = await fetch(`https://localhost:7117/Music/GetAll?searchText=${searchText}&skip=${(currentPage - 1) * itemsPerPage}&take=${itemsPerPage}`);
+        const data = await response.json();
+        setSearchResults(data.items);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchSearchResults();
+  }, [searchText, genreFilter, musics]);
 
   const handleSearchChange = (e) => {
-    setSearch(e.target.value);
+    setSearchText(e.target.value);
   }
 
-  const handleGenreChange = (e) => {
-    setGenreFilter(e.target.value);
+  const handleGenreChange = async (e) => {
+    setSearchText(e.target.value);
   };
-
 
   return (
     <div>
-        <div className='search_bar'>
-      <input type="text" placeholder='search musics' value={search} onChange={handleSearchChange} />
-      <select value={genreFilter} onChange={handleGenreChange}>
-        <option value="">All genres</option>
-        <option value="world">World</option>
-        <option value="metal">Metal</option>
-        <option value="jazz">Jazz</option>
-        <option value="rock">Rock</option>
-        <option value="Blues">Blues</option>
-        <option value="nev_age">Nev Age</option>
-        <option value="r&b">R&B</option>
-        <option value="country">Country</option>
-        <option value="foreign">Foreign</option>
-        <option value="romance">Romance</option>
-        {/* Другие жанры */}
-      </select>
+      <div className='search_bar'>
+        <input type="text" placeholder='search musics' value={searchText} onChange={handleSearchChange} />
+        <select value={genreFilter} onChange={handleGenreChange}>
+          <option value="">All genres</option>
+          {
+            genres.map(genre => (
+              <option key={genre} value={genre}>{genre}</option>
+            ))
+          }
+        </select>
       </div>
-      {/* Отображение отфильтрованных результатов */}
-      <ul>
-        {/*{filteredMovies.map(movie => (
-          <li key={movie.id}>{movie.name} - {movie.genre}</li>
-        ))}*/}
-        <CardListMusic data={filteredMusics} />
-      </ul>
+
+      <CardListMusic data={searchResults} />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 using Dapper;
 using System.Data;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors;
 
@@ -114,6 +115,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories
             var items = await dbConnection.QueryAsync<TEntity>(sqlQuery, param);
 
             return items.ToList() ?? [];
+        }
+
+        public async Task<int> GetProcessedCountAsync(Processable<TEntity> processable)
+        {
+            var param = new DynamicParameters();
+
+            var countQuery = this._processor.GetCountQuery(processable.SearchText, param);
+
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);
         }
     }
 }
