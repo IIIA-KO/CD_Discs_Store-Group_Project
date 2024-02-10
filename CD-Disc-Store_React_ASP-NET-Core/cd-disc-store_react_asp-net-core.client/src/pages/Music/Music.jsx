@@ -28,12 +28,17 @@ const Music = () => {
     setCurrentPage(pageNumber);
   };
 
+  const handleTotalPagesUpdate = (total) => {
+    setTotalPages(total);
+  };
+
   return (
     <div>
       <MusicSearch
         musics={musics}
         currentPage={currentPage}
-        itemsPerPage={itemsPerPage} />
+        itemsPerPage={itemsPerPage}
+        onUpdateTotalPages={handleTotalPagesUpdate} />
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}

@@ -29,12 +29,17 @@ const Disks = () => {
     setCurrentPage(pageNumber);
   };
 
+  const handleTotalPagesUpdate = (total) => {
+    setTotalPages(total);
+  };
+
   return (
     <div>
       <DiskSearch
         discs={discs}
         currentPage={currentPage}
-        itemsPerPage={itemsPerPage} />
+        itemsPerPage={itemsPerPage}
+        onUpdateTotalPages={handleTotalPagesUpdate} />
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}

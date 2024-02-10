@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import "./MusicSearch.css"
 import CardListMusic from '../pages/CardListMusic/CardListMusic';
 
-const MusicSearch = ({ musics, currentPage, itemsPerPage }) => {
+const MusicSearch = ({ musics, currentPage, itemsPerPage, onUpdateTotalPages }) => {
   const [searchText, setSearchText] = useState('');
   const [genreFilter, setGenreFilter] = useState('');
   const [genres, setGenres] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     const fetchGenres = async () => {
@@ -28,12 +29,14 @@ const MusicSearch = ({ musics, currentPage, itemsPerPage }) => {
         const response = await fetch(`https://localhost:7117/Music/GetAll?searchText=${searchText}&skip=${(currentPage - 1) * itemsPerPage}&take=${itemsPerPage}`);
         const data = await response.json();
         setSearchResults(data.items);
+        setTotalItems(data.countItems)
+        onUpdateTotalPages(Math.ceil(data.countItems / itemsPerPage));
       } catch (error) {
         console.error(error);
       }
     };
     fetchSearchResults();
-  }, [searchText, genreFilter, musics]);
+  }, [searchText, genreFilter, musics, currentPage, itemsPerPage, onUpdateTotalPages]);
 
   const handleSearchChange = (e) => {
     setSearchText(e.target.value);

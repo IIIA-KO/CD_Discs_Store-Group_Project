@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import "./FilmSearch.css"
-import CardList from '../pages/CardList/CardList';
+import CardListFilm from '../pages/CardListFilm/CardListFilm'
 
-const FilmSearch = ({ films, currentPage, itemsPerPage }) => {
+const FilmSearch = ({ films, currentPage, itemsPerPage, onUpdateTotalPages }) => {
   const [searchText, setSearchText] = useState('');
   const [genreFilter, setGenreFilter] = useState('');
   const [genres, setGenres] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
-
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     const fetchGenres = async () => {
@@ -30,12 +30,14 @@ const FilmSearch = ({ films, currentPage, itemsPerPage }) => {
         const response = await fetch(url);
         const data = await response.json();
         setSearchResults(data.items);
+        setTotalItems(data.countItems);
+        onUpdateTotalPages(Math.ceil(data.countItems / itemsPerPage));
       } catch (error) {
         console.error(error);
       }
     };
     fetchSearchResults();
-  }, [searchText, genreFilter, films]);
+  }, [searchText, genreFilter, films, currentPage, itemsPerPage, onUpdateTotalPages]);
 
   const handleSearchChange = (e) => {
     setSearchText(e.target.value);
@@ -58,7 +60,7 @@ const FilmSearch = ({ films, currentPage, itemsPerPage }) => {
           }
         </select>
       </div>
-      <CardList data={searchResults} />
+      <CardListFilm data={searchResults} />
     </div>
   );
 };
