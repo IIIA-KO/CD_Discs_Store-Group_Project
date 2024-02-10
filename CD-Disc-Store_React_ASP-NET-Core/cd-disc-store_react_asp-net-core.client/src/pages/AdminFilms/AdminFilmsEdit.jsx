@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom';
 import AdminPanelHeader from '../../AdminPanelHeader/AdminPanelHeader';
+import './../AdminDisks/admindisksadd.css';
+
 
 const AdminFilmsEdit = () => {
     let { id } = useParams();
@@ -55,7 +57,7 @@ const AdminFilmsEdit = () => {
     return (
         <>
             <AdminPanelHeader />
-            <div className='admindisks'>
+            <div className='adminadd'>
                 <h1>Edit film</h1>
                 <form onSubmit={handleSubmit}>
                     <input type="text" name="name" id="name" placeholder='Name' value={name} onChange={(e) => setName(e.target.value)}/>

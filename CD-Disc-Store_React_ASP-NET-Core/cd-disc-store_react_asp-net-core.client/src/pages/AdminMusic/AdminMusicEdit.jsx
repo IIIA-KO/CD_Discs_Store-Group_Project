@@ -52,7 +52,7 @@ const AdminMusicEdit = () => {
     return (
         <>
             <AdminPanelHeader />
-            <div className='admindisks'>
+            <div className='adminadd'>
                 <h1>Edit music</h1>
                 <form onSubmit={handleSubmit}>
                     <input type="text" name="name" id="name" placeholder='Name' value={name} onChange={(e) => setName(e.target.value)}/>

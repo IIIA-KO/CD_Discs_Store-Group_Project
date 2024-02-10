@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import AdminPanelHeader from '../../AdminPanelHeader/AdminPanelHeader';
+import './../AdminDisks/admindisksadd.css';
 
 const AdminFilmsAdd = () => {
     const [name, setName] = useState("");
@@ -37,7 +38,7 @@ const AdminFilmsAdd = () => {
     return (
         <>
             <AdminPanelHeader />
-            <div className='admindisks'>
+            <div className='adminadd'>
                 <h1>Create film</h1>
                 <form onSubmit={handleSubmit}>
                     <input type="text" name="name" id="name" placeholder='Name' onChange={(e) => setName(e.target.value)}/>

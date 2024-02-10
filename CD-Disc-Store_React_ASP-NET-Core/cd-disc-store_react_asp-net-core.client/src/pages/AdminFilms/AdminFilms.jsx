@@ -2,40 +2,41 @@ import React from 'react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import AdminPanelHeader from '../../AdminPanelHeader/AdminPanelHeader'
+import './../AdminDisks/admindisks.css';
 
 
 const AdminFilms = () => {
     const [items, setItems] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
-    let navigate=useNavigate();
+    let navigate = useNavigate();
     function handlePagination(pageNumber, itemsPerPage) {
         console.log(pageNumber);
         console.log(itemsPerPage);
         if (pageNumber)
-        if (pageNumber < 0) {
-            handlePagination(pageNumber+1, itemsPerPage);
-            document.getElementById("leftarrow").disabled = true;
-            return;
-        } else{
-            document.getElementById("leftarrow").disabled = false;
-        }
+            if (pageNumber < 0) {
+                handlePagination(pageNumber + 1, itemsPerPage);
+                document.getElementById("leftarrow").disabled = true;
+                return;
+            } else {
+                document.getElementById("leftarrow").disabled = false;
+            }
         let fetchurl = "https://localhost:7117/Film/GetAll?skip=" + pageNumber * itemsPerPage;
         fetch(fetchurl)
-        .then(res => res.json())
-        .then(data => {
-            //console.log(data.length);
-            if (data.length == 0&&pageNumber>0) {
-                handlePagination(pageNumber-1, itemsPerPage);
-                document.getElementById("rightarrow").disabled = true;
-            } else if (data.length>0){
-                document.getElementById("rightarrow").disabled = false;
-            }
-            if(data.length>itemsPerPage){
-                data=data.slice(0, itemsPerPage);
-            }
-            setItems(data);
-        })
-        .catch(error => console.error(error));
+            .then(res => res.json())
+            .then(data => {
+                //console.log(data.length);
+                if (data.length == 0 && pageNumber > 0) {
+                    handlePagination(pageNumber - 1, itemsPerPage);
+                    document.getElementById("rightarrow").disabled = true;
+                } else if (data.length > 0) {
+                    document.getElementById("rightarrow").disabled = false;
+                }
+                if (data.length > itemsPerPage) {
+                    data = data.slice(0, itemsPerPage);
+                }
+                setItems(data);
+            })
+            .catch(error => console.error(error));
         setCurrentPage(pageNumber);
     }
 
@@ -75,8 +76,8 @@ const AdminFilms = () => {
                                 <td>{item.ageLimit}</td>
                                 <td>{item.coverImagePath}</td>
                                 <td>{item.imageStorageName}</td>
-                                <td><button className='edit'onClick={() => window.location.href="/adminpanel/films/edit/id=" + item.id}>Edit</button></td>
-                                <td><button className='delete' onClick={() => window.location.href="/adminpanel/films/delete/id=" + item.id}>Delete</button></td>
+                                <td><button className='edit' onClick={() => window.location.href = "/adminpanel/films/edit/id=" + item.id}>Edit</button></td>
+                                <td><button className='delete' onClick={() => window.location.href = "/adminpanel/films/delete/id=" + item.id}>Delete</button></td>
                             </tr>
                         ))}
                     </tbody>

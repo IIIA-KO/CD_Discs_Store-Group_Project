@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import AdminPanelHeader from '../../AdminPanelHeader/AdminPanelHeader';
+import './admindisksadd.css';
 
 const AdminDisksAdd = () => {
     const [name, setName] = useState("");
@@ -44,7 +45,7 @@ const AdminDisksAdd = () => {
     return (
         <>
             <AdminPanelHeader />
-            <div className='admindisks'>
+            <div className='adminadd'>
                 <h1>Create disk</h1>
                 <form onSubmit={handleSubmit}>
                     <input type="text" name="name" id="name" placeholder='Name' onChange={(e) => setName(e.target.value)}/>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import AdminPanelHeader from '../../AdminPanelHeader/AdminPanelHeader';
+import './../AdminDisks/admindisksadd.css';
 
 const AdminMusicAdd = () => {
     const [name, setName] = useState("");
@@ -36,7 +37,7 @@ const AdminMusicAdd = () => {
     return (
         <>
             <AdminPanelHeader />
-            <div className='admindisks'>
+            <div className='adminadd'>
                 <h1>Create music</h1>
                 <form onSubmit={handleSubmit}>
                     <input type="text" name="name" id="name" placeholder='Name' onChange={(e) => setName(e.target.value)}/>
