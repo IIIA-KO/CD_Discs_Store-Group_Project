@@ -9,8 +9,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
 
-        [Required(ErrorMessage = "The \"Id Order\" field is required")]
-        public Guid IdOrder { get; set; }
+        //[Required(ErrorMessage = "The \"Id Order\" field is required")]
+        public Guid? IdOrder { get; set; }
 
         [Required(ErrorMessage = "The \"Id Disc\" field is required")]
         public Guid IdDisc { get; set; }
