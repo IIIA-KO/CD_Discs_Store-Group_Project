@@ -17,12 +17,10 @@ export default function CardMusic({ item }) {
                 <div className="descriptoin">{item.artist}</div>
                 <div className="language">{item.language}</div>
                 <div className='forPurchase'>
-                    <div className="price">100$</div>
                     <div className="btn_cart">
                         <button>&#10027; In Cart</button>
                     </div>
                 </div>
-
             </div>
         </div>
     )

@@ -1,12 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions
@@ -17,13 +14,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exstensions
         {
             services.AddSingleton<IDapperContext, DapperContext>();
 
-            services.AddScoped<ProcessableViewModelProcessor<Client>, ClientProcessor>();
-            services.AddScoped<ProcessableViewModelProcessor<Film>, FilmProcessor>();
-            services.AddScoped<ProcessableViewModelProcessor<Music>, MusicProcessor>();
-            services.AddScoped<ProcessableViewModelProcessor<Disc>, DiscProcessor>();
-            services.AddScoped<ProcessableViewModelProcessor<Order>, OrderProcessor>();
-            services.AddScoped<ProcessableViewModelProcessor<OrderItem>, OrderItemProcessor>();
-            services.AddScoped<ProcessableViewModelProcessor<OperationLog>, OperationLogProcessor>();
+            services.AddScoped<Processor<Client>, ClientProcessor>();
+            services.AddScoped<Processor<Film>, FilmProcessor>();
+            services.AddScoped<Processor<Music>, MusicProcessor>();
+            services.AddScoped<Processor<Disc>, DiscProcessor>();
+            services.AddScoped<Processor<Order>, OrderProcessor>();
+            services.AddScoped<Processor<OrderItem>, OrderItemProcessor>();
+            services.AddScoped<Processor<OperationLog>, OperationLogProcessor>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
             services.AddScoped<IClientRepository, ClientRepository>();

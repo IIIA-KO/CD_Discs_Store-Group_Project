@@ -1,32 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import "./DiskSearch.css"
 import DiskCardList from '../DiskCardList/DiskCardList';
-const DiskSearch = ({ disks }) => {
-    const [search, setSearch] = useState('');
-  
-  const [filteredDisks, setFilteredDisks] = useState([]);
+import Cart from '../pages/Cart/Cart';
+
+const DiskSearch = ({discs, currentPage, itemsPerPage}) => {
+  const [searchText, setSearchText] = useState('');
+  const [cartItems, setCartItems] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
-    const filtered = disks.filter((disk) => {
-      const titleMatch = disk.name.toLowerCase().includes(search.toLowerCase());
-      return titleMatch;
-    });
-    setFilteredDisks(filtered);
-  }, [search, disks]);
+    const fetchSearchResults = async () => {
+      try {
+        const response = await fetch(`https://localhost:7117/Discs/GetAll?searchText=${searchText}&skip=${(currentPage - 1) * itemsPerPage}&take=${itemsPerPage}`);
+        const data = await response.json();
+        setSearchResults(data.items);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchSearchResults();
+  }, [searchText, discs]);
 
   const handleSearchChange = (e) => {
-    setSearch(e.target.value);
-  }
+    setSearchText(e.target.value);
+  };
+
+  const addToCart = (item) => {
+    console.log(item, 'add to cart');
+    setCartItems([...cartItems, item]);
+  };
 
   return (
     <div>
-        <div className='search_bar'>
-      <input type="text" placeholder='search Disk' value={search} onChange={handleSearchChange} />
-      
+      <div className='search_bar'>
+        <input type="text" placeholder='Search Disk' value={searchText} onChange={handleSearchChange} />
       </div>
-      {/* Отображение отфильтрованных результатов */}
       <ul>
-        <DiskCardList data={filteredDisks} />
+        <DiskCardList data={searchResults} addToCart={addToCart} />
+        <Cart items={cartItems} />
       </ul>
     </div>
   );

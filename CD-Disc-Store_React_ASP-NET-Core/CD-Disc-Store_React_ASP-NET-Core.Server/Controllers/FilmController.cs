@@ -1,37 +1,38 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Roles = "Administrator,Employee")]
     public class FilmController(IFilmRepository filmRepository, ICloudStorage cloudStorage) : Controller
     {
         private readonly IFilmRepository _filmRepository = filmRepository;
         private readonly ICloudStorage _cloudStorage = cloudStorage;
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IReadOnlyList<Film>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
+        [AllowAnonymous]
+        public async Task<ActionResult<IReadOnlyList<Film>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0, int take = 12)
         {
-            var model = new ProcessableViewModel<Film>
+            var model = new Processable<Film>
             {
                 SearchText = searchText,
                 SortOrder = sortOrder,
                 SortFieldName = sortField?.ToLowerInvariant() ?? "id",
                 Skip = skip,
-                PageSize = 20
+                PageSize = take
             };
 
-            return Ok(await this._filmRepository.GetProcessedAsync(model));
+            model.Items = await this._filmRepository.GetProcessedAsync(model);
+            model.CountItems = await this._filmRepository.GetProcessedCountAsync(model);
+
+            return Ok(model);
         }
 
         [HttpGet("GetFilm")]
+        [AllowAnonymous]
         public async Task<ActionResult<Film>> GetFilm(Guid? id)
         {
             if (id == null)
@@ -49,6 +50,21 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 return NotFound();
             }
 
+        }
+
+        [HttpGet("GetGenres")]
+        [AllowAnonymous]
+        public async Task<ActionResult<Film>> GetGenres()
+        {
+            try
+            {
+                var genres = await this._filmRepository.GetGenres();
+                return Ok(genres);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
 
         [HttpPost("Create")]

@@ -4,7 +4,7 @@ import Disks from './pages/Disks/Disks'
 import Films from './pages/Films/Films'
 import Music from './pages/Music/Music'
 
-import Cart from './pages/Cart/Card';
+import Cart from './pages/Cart/Cart';
 import Profile from './pages/Profile/Profile';
 import {BrowserRouter,Routes,Route,Link} from 'react-router-dom'
 import Header from './Header/Header';
@@ -26,7 +26,10 @@ import AdminMusicDelete from './pages/AdminMusic/AdminMusicDelete';
 import AdminMusicEdit from './pages/AdminMusic/AdminMusicEdit';
 
 
+import { useState } from 'react';
+
 function App() {
+    const [cartItems, setCartItems] = useState([]);
     return (
         <>
             <Header />
@@ -38,7 +41,7 @@ function App() {
                 <Route exact path="/films/:id" element={<FilmDetails/>} />
                 <Route path='/music' element={<Music />} />
                 <Route exact path="/music/:id" element={<MusicDetails/>} />
-                <Route path='/cart' element={<Cart />} />
+                <Route path='/cart' element={<Cart items={cartItems} />} />
                 <Route path='/profile' element={<Profile />} />
                 <Route path='/adminpanel' element={<AdminPanel />} />
                 <Route path='/adminpanel/disks' element={<AdminDisks />} />

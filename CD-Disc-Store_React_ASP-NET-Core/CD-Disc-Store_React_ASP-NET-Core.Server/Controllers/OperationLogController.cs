@@ -1,12 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Roles = "Administrator,Employee")]
     public class OperationLogController(IOperationLogRepository operationLogRepository) : Controller
     {
         private readonly IOperationLogRepository _operationLogRepository = operationLogRepository;

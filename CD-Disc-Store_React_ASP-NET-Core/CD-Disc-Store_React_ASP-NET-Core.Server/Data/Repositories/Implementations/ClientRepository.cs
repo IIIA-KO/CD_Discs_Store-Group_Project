@@ -1,19 +1,13 @@
 using Dapper;
 using System.Data;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class ClientRepository : GenericRepository<Client>, IClientRepository
+    public class ClientRepository(IDapperContext context, Processor<Client> processor)
+        : GenericRepository<Client>(context, processor), IClientRepository
     {
-        public ClientRepository(IDapperContext context, ProcessableViewModelProcessor<Client> processor) : base(context, processor)
-        {
-        }
-
         public async Task<Client> GetByUserIdAsync(string userId)
         {
             if (!await UserExistsAsync(userId))

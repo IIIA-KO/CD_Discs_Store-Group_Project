@@ -1,29 +1,30 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Roles = "Administrator,Employee")]
     public class OrderItemController(IOrderItemRepository orderItemRepository) : Controller
     {
         private readonly IOrderItemRepository _orderItemRepository = orderItemRepository;
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IReadOnlyList<OrderItem>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
+        public async Task<ActionResult<IReadOnlyList<OrderItem>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0, int take = 12)
         {
-            var model = new ProcessableViewModel<OrderItem>
+            var model = new Processable<OrderItem>
             {
                 SearchText = searchText,
                 SortOrder = sortOrder,
                 SortFieldName = sortField?.ToLowerInvariant() ?? "id",
                 Skip = skip,
-                PageSize = 20
+                PageSize = take
             };
+
+            model.Items = await this._orderItemRepository.GetProcessedAsync(model);
+            model.CountItems = await this._orderItemRepository.GetProcessedCountAsync(model);
 
             return Ok(model);
         }

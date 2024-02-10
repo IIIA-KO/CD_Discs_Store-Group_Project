@@ -1,0 +1,15 @@
+input, select {
+    margin: 0 10px 10px 0;
+    padding: 8px;
+    font-size: 16px;
+  }
+  
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  li {
+    margin-bottom: 5px;
+  }
+  

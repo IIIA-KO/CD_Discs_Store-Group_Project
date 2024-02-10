@@ -4,6 +4,5 @@ namespace CdDiskStoreAspNetCore.Models.Interfaces.Data
 {
     public interface IDataProcessable : ISearchable, ISortable, IPaginable
     {
-
     }
 }

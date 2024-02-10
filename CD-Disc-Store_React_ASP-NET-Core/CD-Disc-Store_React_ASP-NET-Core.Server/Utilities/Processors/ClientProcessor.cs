@@ -1,21 +1,14 @@
 using Dapper;
-using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors
 {
-    public class ClientProcessor : ProcessableViewModelProcessor<Client>
+    public class ClientProcessor : Processor<Client>
     {
         public override string GetSearchConditions(string searchText, DynamicParameters parameters)
         {
-            if (string.IsNullOrEmpty(searchText))
-            {
-                return "1=1";
-            }
-
             var conditions = new List<string>();
 
-            foreach (var fieldName in ProcessableViewModel<Client>.AllFieldNames)
+            foreach (var fieldName in Processable<Client>.AllFieldNames)
             {
                 var propertyType = typeof(Client).GetProperty(fieldName)?.PropertyType;
 

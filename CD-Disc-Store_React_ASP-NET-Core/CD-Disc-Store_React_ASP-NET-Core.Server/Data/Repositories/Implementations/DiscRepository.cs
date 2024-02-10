@@ -1,13 +1,11 @@
 using Dapper;
 using System.Data;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementations
 {
-    public class DiscRepository(IDapperContext context, ProcessableViewModelProcessor<Disc> processor)
+    public class DiscRepository(IDapperContext context, Processor<Disc> processor)
         : GenericRepository<Disc>(context, processor), IDiscRepository
     {
         public async Task<IReadOnlyList<Film>> GetFilmsOnDiscAsync(Guid? id)

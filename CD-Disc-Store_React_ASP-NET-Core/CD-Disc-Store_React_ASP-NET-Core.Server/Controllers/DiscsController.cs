@@ -1,37 +1,38 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Options;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Services;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Roles = "Administrator,Employee")]
     public class DiscsController(IDiscRepository discRepository, ICloudStorage cloudStorage) : Controller
     {
         private readonly IDiscRepository _discRepository = discRepository;
         private readonly ICloudStorage _cloudStorage = cloudStorage;
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0, int pageSize = 20)
+        [AllowAnonymous]
+        public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0, int take = 12)
         {
-			var model = new ProcessableViewModel<Disc>
-			{
-				SearchText = searchText,
-				SortOrder = sortOrder,
+            var model = new Processable<Disc>
+            {
+                SearchText = searchText,
+                SortOrder = sortOrder,
                 SortFieldName = sortField?.ToLowerInvariant() ?? "id",
                 Skip = skip,
-				PageSize = pageSize
-			};
+                PageSize = take
+            };
 
-			return Ok(await this._discRepository.GetProcessedAsync(model));
-		}
+            model.Items = await this._discRepository.GetProcessedAsync(model);
+            model.CountItems = await this._discRepository.GetProcessedCountAsync(model);
+
+            return Ok(model);
+        }
 
         [HttpGet("GetDisc")]
+        [AllowAnonymous]
         public async Task<ActionResult<Disc>> GetDisc(Guid? id)
         {
             if (id == null)
@@ -85,6 +86,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetFilmsOnDisc/{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<IReadOnlyList<Film>>> GetFilms(Guid? id)
         {
             if (id == null || !await this._discRepository.ExistsAsync(id.Value))
@@ -104,6 +106,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpGet("GetMusicOnDisc/{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<IReadOnlyList<Music>>> GetMusic(Guid? id)
         {
             if (id == null || !await this._discRepository.ExistsAsync(id.Value))

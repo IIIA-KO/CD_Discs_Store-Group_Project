@@ -2,30 +2,20 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using System.ComponentModel.DataAnnotations;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
 using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels.Account;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Interfaces;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AccountController : Controller
+    public class AccountController(
+        UserManager<IdentityUser> userManager,
+        SignInManager<IdentityUser> signInManager,
+        IClientRepository clientRepository) : Controller
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly IClientRepository _clientRepository;
-
-        public AccountController(
-            UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager,
-            IClientRepository clientRepository)
-        {
-            this._userManager = userManager;
-            this._signInManager = signInManager;
-            this._clientRepository = clientRepository;
-        }
+        private readonly UserManager<IdentityUser> _userManager = userManager;
+        private readonly SignInManager<IdentityUser> _signInManager = signInManager;
+        private readonly IClientRepository _clientRepository = clientRepository;
 
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterViewModel model)
@@ -85,7 +75,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPut("Edit")]
-        public async Task<IActionResult> Edit([FromBody] EditViewModel model)
+        public async Task<IActionResult> Edit([FromBody] UserBaseDto model)
         {
             try
             {
@@ -115,7 +105,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             }
         }
 
-        private bool ValidateUserInfo(EditViewModel model)
+        private bool ValidateUserInfo(UserBaseDto model)
         {
             if (string.IsNullOrEmpty(model.UserName) || model.UserName.Length > 50)
             {

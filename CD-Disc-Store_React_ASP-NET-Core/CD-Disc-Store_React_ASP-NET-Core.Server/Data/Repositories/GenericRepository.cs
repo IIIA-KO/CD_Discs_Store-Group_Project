@@ -1,23 +1,19 @@
 using Dapper;
 using System.Data;
 using System.ComponentModel.DataAnnotations.Schema;
-using CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
-using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Exceptions;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories
 {
-    public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class
+    public class GenericRepository<TEntity>(
+        IDapperContext context,
+        Processor<TEntity> processor)
+        : IGenericRepository<TEntity> where TEntity : class
     {
-        protected readonly IDapperContext _context;
-        private readonly ProcessableViewModelProcessor<TEntity> _processor;
-
-        public GenericRepository(IDapperContext context, ProcessableViewModelProcessor<TEntity> processor)
-        {
-            this._context = context;
-            this._processor = processor;
-        }
+        protected readonly IDapperContext _context = context;
+        private readonly Processor<TEntity> _processor = processor;
 
         protected static string GetNotFoundErrorMessage() =>
             $"The {GetTableName()} with specified Id was not found.";
@@ -96,7 +92,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories
                 .ToList();
         }
 
-
         public async Task<int> DeleteAsync(Guid id)
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
@@ -111,7 +106,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories
             return count > 0;
         }
 
-        public async Task<IReadOnlyList<TEntity>> GetProcessedAsync(ProcessableViewModel<TEntity> processable)
+        public async Task<IReadOnlyList<TEntity>> GetProcessedAsync(Processable<TEntity> processable)
         {
             var param = new DynamicParameters();
             var sqlQuery = this._processor.GetSqlQuery(processable, param);
@@ -120,6 +115,16 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories
             var items = await dbConnection.QueryAsync<TEntity>(sqlQuery, param);
 
             return items.ToList() ?? [];
+        }
+
+        public async Task<int> GetProcessedCountAsync(Processable<TEntity> processable)
+        {
+            var param = new DynamicParameters();
+
+            var countQuery = this._processor.GetCountQuery(processable.SearchText, param);
+
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            return await dbConnection.ExecuteScalarAsync<int>(countQuery, param);
         }
     }
 }
