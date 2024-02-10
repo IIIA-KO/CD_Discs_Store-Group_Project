@@ -1,30 +1,29 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
-import './filmDetails.css';
-import Card from '../../pages/Card/Card';
-import CardList from '../CardList/CardList';
+import './musicDetails.css';
+import CardListMusic from '../CardListMusic/CardListMusic';
 
-const FilmDetails = () => {
+const MusicDetails = () => {
   let { id } = useParams();
   const [items, setItems] = useState([]);
-  const [films, setFilms] = useState([]);
+  const [music, setMusic] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let url = "https://localhost:7117/Film/GetFilm?" + id;
+        let url = "https://localhost:7117/Music/GetMusic?" + id;
         const response1 = await fetch(url);
         const data1 = await response1.json();
         setItems(data1);
 
-        let urlList = "https://localhost:7117/Film/GetAll?searchText=" + data1.genre + "&sortField=genre&skip=0";
+        let urlList = "https://localhost:7117/Music/GetAll?searchText=" + data1.genre + "&sortField=genre&skip=0";
         console.log(urlList)
         const response2 = await fetch(urlList);
-        const data2 = await response2.json();
+        let data2 = await response2.json();
         console.log(data2)
-        const filteredFilms = data2.filter(item => item.genre === data1.genre).slice(0, 4);
-        setFilms(filteredFilms);
+        const filteredMusic = data2.filter(item => item.genre === data1.genre).slice(0, 4);
+        setMusic(filteredMusic);
 
         setLoading(false);
       } catch (error) {
@@ -40,31 +39,28 @@ const FilmDetails = () => {
   return (
     <div>
       <div className="details">
-        <div className="details-image">
+        <div className="details-image" onClick={() => { getDetails(items.id) }}>
           <img src={items.coverImagePath} alt="img" />
         </div>
         <div className="details-info">
           <h1>{items.name}</h1>
           <div className='details-description'>
-            <p>Producer: &nbsp;<span>{items.producer}</span></p>
-            <p>Main role: <span>{items.mainRole}</span></p>
-            <p>Age limit: <span>{items.ageLimit}+</span></p>
+            <p>Artist: &nbsp;<span>{items.artist}</span></p>
+            <p>Language: <span>{items.language}</span></p>
           </div>
-          <div className=' genre'>
+          <div className='d-flex genre'>
             <p>Genre:</p>
             <div className="genreParagraph"><p>{items.genre}</p></div>
           </div>
           {items.hasOwnProperty('rating') ? <Stars rating={items.rating} /> : null}
-          <button className="back" onClick={() => navigate('/films', { replace: true })}>Back</button>
+          <button className="back" onClick={() => navigate('/music', { replace: true })}>Back</button>
         </div>
       </div>
       <div className="more">
         <h2>You can also enjoy:</h2>
-        {console.log(films)}
-        {console.log(loading)}
         <div className="music">
-          {!loading && films.length > 0 && (
-            <CardList data={films} />
+          {!loading && music.length > 0 && (
+            <CardListMusic data={music} />
           )}
           {loading && <p>Loading films...</p>}
         </div>
@@ -74,4 +70,4 @@ const FilmDetails = () => {
   )
 }
 
-export default FilmDetails
+export default MusicDetails
