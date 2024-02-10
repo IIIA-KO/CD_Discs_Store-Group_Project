@@ -12,7 +12,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         private readonly IOrderRepository _orderRepository = orderRepository;
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IReadOnlyList<Order>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
+        public async Task<ActionResult<IReadOnlyList<Order>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0, int take = 12)
         {
             var model = new Processable<Order>
             {
@@ -20,10 +20,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 SortOrder = sortOrder,
                 SortFieldName = sortField?.ToLowerInvariant() ?? "id",
                 Skip = skip,
-                PageSize = 20
+                PageSize = 12
             };
 
-            return Ok(await this._orderRepository.GetProcessedAsync(model));
+            model.Items = await this._orderRepository.GetProcessedAsync(model);
+            model.CountItems = await this._orderRepository.GetProcessedCountAsync(model);
+
+            return Ok(model);
         }
 
         [HttpGet("GetOrder")]

@@ -9,5 +9,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories
         Task<int> DeleteAsync(Guid id);
         Task<bool> ExistsAsync(Guid id);
         Task<IReadOnlyList<T>> GetProcessedAsync(Processable<T> processable);
+        Task<int> GetProcessedCountAsync(Processable<T> processable);
     }
 }

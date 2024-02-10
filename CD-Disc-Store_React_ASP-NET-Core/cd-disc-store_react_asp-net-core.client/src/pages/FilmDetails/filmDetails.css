@@ -68,8 +68,10 @@ h1 {
 }
 
 .genre {
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin-top: 0px;
+    position:relative;
+    display: flex;
+    height: fit-content;
 }
 
 .back {
@@ -92,18 +94,28 @@ h1 {
     margin-left:20px;
 }
 
-.more{
-    margin-top: 30px;
-    margin-left:100px;
-    margin-right: 100px;
+.Card-list{
+    display: flex;
+    justify-content: center;
+    width:80vw;
+    position:relative;
+    left:-100px;
 }
 
-.films{
+.Card-list>div{
+    margin:10px;
+}
+.more{
+    margin-top: 30px;
+    margin-left:10px;
+    margin-right: 10px;
+}
+
+/* .films{
     margin-top: 30px;
     margin-bottom: 100px;
     display: flex;
     flex-direction: row;
-    gap: 50px;
     flex-wrap: wrap;
     justify-content: center;
-}
+} */
