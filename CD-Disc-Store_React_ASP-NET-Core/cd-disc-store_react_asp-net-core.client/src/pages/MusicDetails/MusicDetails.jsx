@@ -21,8 +21,8 @@ const MusicDetails = () => {
         console.log(urlList)
         const response2 = await fetch(urlList);
         let data2 = await response2.json();
-        console.log(data2)
-        const filteredMusic = data2.filter(item => item.genre === data1.genre).slice(0, 4);
+        console.log(data2.items)
+        const filteredMusic = data2.items.filter(item => item.genre === data1.genre).slice(0, 4);
         setMusic(filteredMusic);
 
         setLoading(false);

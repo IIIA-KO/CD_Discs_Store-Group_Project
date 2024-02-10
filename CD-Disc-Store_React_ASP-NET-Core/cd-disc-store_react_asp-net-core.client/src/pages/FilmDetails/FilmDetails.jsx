@@ -18,12 +18,12 @@ const FilmDetails = () => {
         const data1 = await response1.json();
         setItems(data1);
 
-        let urlList = "https://localhost:7117/Film/GetAll?searchText=" + data1.genre + "&sortField=genre&skip=0";
+        let urlList = "https://localhost:7117/Film/GetAll?searchText=" + data1.genre + "&sortField=genre&skip=0&take=20";
         console.log(urlList)
         const response2 = await fetch(urlList);
         const data2 = await response2.json();
-        console.log(data2)
-        const filteredFilms = data2.filter(item => item.genre === data1.genre).slice(0, 4);
+        console.log(data2.items)
+        const filteredFilms = data2.items.filter(item => item.genre === data1.genre).slice(0, 4);
         setFilms(filteredFilms);
 
         setLoading(false);

@@ -4,10 +4,10 @@ import './adminpanelheader.css'
 const AdminPanelHeader = () => {
     return (
         <>
-            <header>
+            <header className="adminheader">
                 <div className="wrapper">
                     <div className="navbar">
-                        <div className="logo"><p><a href="/" className='link'>AdminPanel</a></p></div>
+                        <div className="head"><p><a className='link'>AdminPanel</a></p></div>
                         <nav>
                             <ul>
                                 <li><NavLink to="/adminpanel/disks" className='link' activeClassName="active">Disks</NavLink></li>
