@@ -4,12 +4,7 @@ import CardList from '../CardList/CardList';
 import MovieSearch from '../../MovieSearch/MovieSearch';
 import Pagination from '../../Pagination/Pagination';
 const Films = () => {
-  // const [items, setItems] = useState([]);
-  // let [currentPage, setCurrentPage] = useState(0);
-  // useEffect(() => {
 
-  //   fetch(`https://localhost:7117/Film/GetAll?skip=${currentPage}`).then(res => res.json()).then(data => setItems(data)).catch(error => console.error(error));
-  // }, [])
   const [items, setItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
 

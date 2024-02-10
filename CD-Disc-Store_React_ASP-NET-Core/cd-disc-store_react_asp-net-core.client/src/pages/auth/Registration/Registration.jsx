@@ -1,24 +1,30 @@
 
-
 import React from 'react';
 import { useMutation, useQueryClient } from 'react-query';
+import { useState } from 'react';
 import axios from 'axios';
 import './Registration.css'
 
 
 const Registration = () => {
   const queryClient = useQueryClient();
+  const [registrationError, setRegistrationError] = useState(null); // Состояние для отслеживания ошибки регистрации
 
-  // Функция мутации для отправки данных на сервер с помощью Axios
   const registerUser = async (formData) => {
-    const response = await axios.post('https://localhost:7117/Account/Register', formData);
+    try {
+      const response = await axios.post('https://localhost:7117/Account/Register', formData);
 
-    if (!response.data.success) {
-      throw new Error(response.data.message);
+      if (!response.data.success) {
+        throw new Error(response.data.message);
+      }
+
+      setRegistrationError(null); // Очистить предыдущую ошибку, если была
+
+      // Аннулировать и обновить данные пользователя после успешной регистрации.
+      queryClient.invalidateQueries('userData');
+    } catch (error) {
+      setRegistrationError('Ошибка регистрации. Пожалуйста, проверьте введенные данные.');
     }
-    onSuccess(response.data.message); // its a success message from the server and the registration was successfully registered  
-    // Аннулировать и обновить данные пользователя после успешной регистрации.
-    queryClient.invalidateQueries('userData');
   };
 
   // React-Query useMutation hook
@@ -26,14 +32,14 @@ const Registration = () => {
 
   // Стан форми та перевірка
   const [formData, setFormData] = React.useState({
-    username: '',
+    userName: '',
     email: '',
     password: '',
     confirmPassword: '',
     phoneNumber: '',
     address: '',
     city: '',
-    birthday: '',
+    birthDay: '',
     marriedStatus: true,
     sex: true,
     hasChild: false,
@@ -101,7 +107,7 @@ const Registration = () => {
           <input
             type="text"
             value={formData.username}
-            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+            onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
           />
         </label>
         <br />
@@ -181,12 +187,12 @@ const Registration = () => {
           <input
             type="date"
             value={formData.birthday}
-            
-            onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+
+            onChange={(e) => setFormData({ ...formData, birthDay: e.target.value })}
           />
         </label>
         {/* Показати помилки перевірки*/}
-        {errors.birthday && <div style={{ color: 'red' }}>{errors.birthday}</div>}
+        {errors.birthday && <div style={{ color: 'red' }}>{errors.birthDay}</div>}
         <br />
 
         <label>
@@ -250,6 +256,11 @@ const Registration = () => {
 
         {/* Submit button */}
         <button type="submit" disabled={isSuccess} >Register</button>
+
+        {/* Отображение блока с сообщением об успешной или неудачной регистрации */}
+        {registrationError && <div style={{ color: 'red' }}>{registrationError}</div>}
+        {isSuccess && <div style={{ color: 'green' }}>Вы успешно зарегистрировались!</div>}
+        {/* ... (остальной код формы) */}
 
       </form>
     </div>

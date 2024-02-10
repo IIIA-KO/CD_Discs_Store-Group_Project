@@ -4,12 +4,6 @@ import CardListMusic from '../CardListMusic/CardListMusic';
 import MusicSearch from '../../MusicSearch/MusicSearch';
 import Pagination from '../../Pagination/Pagination';
 const Music = () => {
-  // const [items, setItems] = useState([]);
-
-  // useEffect(() => {
-
-  //   fetch("https://localhost:7117/Music/GetAll?skip=0").then(res => res.json()).then(data => setItems(data)).catch(error => console.error(error));
-  // }, [])
   const [items, setItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
 

@@ -10,6 +10,7 @@ import {BrowserRouter,Routes,Route,Link} from 'react-router-dom'
 import Header from './Header/Header';
 import Footer from './Footer/Footer';
 import FilmDetails from './pages/FilmDetails/FilmDetails'
+import Authentication from './Authentication/Authentication';
 
 
 import { useState } from 'react';
@@ -28,6 +29,7 @@ function App() {
                 <Route path='/music' element={<Music />} />
                 <Route path='/cart' element={<Cart items={cartItems} />} />
                 <Route path='/profile' element={<Profile />} />
+                <Route path="/authentication" element={<Authentication />} />
             </Routes>
             </main>
             <Footer />

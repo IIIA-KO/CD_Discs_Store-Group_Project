@@ -1,27 +1,3 @@
-// import React from 'react';
-
-// const Cart = ({ items }) => {
-//   if (!items || items.length === 0) {
-//     return (<>
-//       <p>Your cart is empty.</p>
-      
-//     </>
-//     );
-//   }
-
-//   return (
-//     <div className="Cart">
-//       <h2>Cart</h2>
-//       <ul>
-//         {items.map((item, index) => (
-//           <li key={index}>
-//             {item.name} - {item.price}$
-//           </li>
-//         ))}
-//       </ul>
-//     </div>
-//   );
-// };
 
 // export default Cart;
 import React, { useState, useEffect } from 'react';
