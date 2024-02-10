@@ -1,0 +1,78 @@
+.admindisks {
+    padding: 20px;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #292A2D;
+}
+
+.add {
+    background-color: #292A2D;
+    color: white;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #292A2D;
+    color:white;
+}
+
+.edit, .delete {
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.edit{
+    background-color: #FFD930;
+    color: #292A2D;
+}
+
+.delete{
+    background-color: #DC3545;
+    color: white;
+}
+.delete:hover {
+    background-color: #C82333
+
+}
+.edit:hover {
+    background-color: #E6C800; 
+}
+
+.pagination {
+    margin-top: 20px;
+}
+
+#leftarrow, #rightarrow {
+    background-color: #292A2D;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    margin-right: 10px;
+    border-radius: 5px;
+}
+
+#leftarrow:hover, #rightarrow:hover {
+    background-color: #1F2022;
+}

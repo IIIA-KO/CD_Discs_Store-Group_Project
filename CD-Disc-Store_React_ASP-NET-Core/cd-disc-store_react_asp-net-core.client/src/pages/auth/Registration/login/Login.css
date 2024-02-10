@@ -1,50 +1,48 @@
-.login-container {
+h2 {
+    text-align: center;
+    color: #333;
+}
+.login{
+    max-width: 400px;
+    background-color: rgb(246, 244, 244);
+    padding: 75px 60px;
+}
+form {
     max-width: 400px;
     margin: 0 auto;
-    padding: 40px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    margin-top: 50px ;
-    margin-bottom: 120px;
-  }
-  
-
-.login-form {
-    max-width: 300px;
-    margin: auto;
-    padding: 20px;
+    padding: 20px 30px;
     border: 1px solid #ccc;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
 }
 
-.login-form label {
+form div {
+    margin-bottom: 15px;
+}
+
+label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 
-.login-form input {
+input {
     width: 100%;
     padding: 8px;
-    margin-bottom: 15px;
-    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 3px;
 }
 
-.login-form button {
+button {
     background-color: #4caf50;
     color: white;
-    padding: 10px 15px;
+    padding: 10px;
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
 }
 
-.login-form button:hover {
-    background-color: #45a049;
-}
-
-.error {
-    color: red;
-    margin-top: 5px;
+button:disabled {
+    background-color: #ddd;
+    cursor: not-allowed;
 }

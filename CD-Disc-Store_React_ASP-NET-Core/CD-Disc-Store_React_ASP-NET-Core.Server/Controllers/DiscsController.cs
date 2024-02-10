@@ -6,6 +6,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Roles = "Administrator,Employee")]
     public class DiscsController(IDiscRepository discRepository, ICloudStorage cloudStorage) : Controller
     {
         private readonly IDiscRepository _discRepository = discRepository;
@@ -13,7 +14,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
         [HttpGet("GetAll")]
         [AllowAnonymous]
-        public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
+        public async Task<ActionResult<IReadOnlyList<Disc>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0, int take = 12)
         {
             var model = new Processable<Disc>
             {
@@ -21,10 +22,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 SortOrder = sortOrder,
                 SortFieldName = sortField?.ToLowerInvariant() ?? "id",
                 Skip = skip,
-                PageSize = 20
+                PageSize = take
             };
 
-            return Ok(await this._discRepository.GetProcessedAsync(model));
+            model.Items = await this._discRepository.GetProcessedAsync(model);
+            model.CountItems = await this._discRepository.GetProcessedCountAsync(model);
+
+            return Ok(model);
         }
 
         [HttpGet("GetDisc")]
@@ -48,7 +52,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPost("Create")]
-        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> Create([Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath,ImageStorageName,ImageFile")] Disc disc, StorageOptions storageOptions)
         {
             if (!ModelState.IsValid)
@@ -123,7 +126,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPut("Edit")]
-        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> Edit(Guid? existingDiscId, [Bind("Id,Name,Price,LeftOnStock,Rating,CoverImagePath,ImageFile,ImageStorageName")] Disc changed, StorageOptions storageOptions)
         {
             if (!existingDiscId.HasValue || changed == null)
@@ -171,7 +173,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpDelete("Delete")]
-        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id, StorageOptions storageOptions)
         {
             try

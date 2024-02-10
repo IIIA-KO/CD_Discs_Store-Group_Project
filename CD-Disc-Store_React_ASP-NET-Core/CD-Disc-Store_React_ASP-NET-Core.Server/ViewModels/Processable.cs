@@ -18,5 +18,8 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.ViewModels
 
         public int Skip { get; set; } = 0;
         public int PageSize { get; set; } = 10;
+        public int CountItems { get; set; }
+
+        public IEnumerable<T>? Items { get; set; }
     }
 }

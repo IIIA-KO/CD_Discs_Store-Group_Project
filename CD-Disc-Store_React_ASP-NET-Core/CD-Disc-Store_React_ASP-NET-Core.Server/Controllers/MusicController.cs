@@ -6,6 +6,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Roles = "Administrator,Employee")]
     public class MusicController(IMusicRepository musicRepository, ICloudStorage cloudStorage) : Controller
     {
         private readonly IMusicRepository _musicRepository = musicRepository;
@@ -13,7 +14,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
         [HttpGet("GetAll")]
         [AllowAnonymous]
-        public async Task<ActionResult<IReadOnlyList<Music>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
+        public async Task<ActionResult<IReadOnlyList<Music>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0, int take = 12)
         {
             var model = new Processable<Music>
             {
@@ -21,10 +22,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 SortOrder = sortOrder,
                 SortFieldName = sortField?.ToLowerInvariant() ?? "id",
                 Skip = skip,
-                PageSize = 20
+                PageSize = take
             };
 
-            return Ok(await this._musicRepository.GetProcessedAsync(model));
+            model.Items = await this._musicRepository.GetProcessedAsync(model);
+            model.CountItems = await this._musicRepository.GetProcessedCountAsync(model);
+
+            return Ok(model);
         }
 
         [HttpGet("GetMusic")]
@@ -47,8 +51,22 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             }
         }
 
+        [HttpGet("GetGenres")]
+        [AllowAnonymous]
+        public async Task<ActionResult<Film>> GetGenres()
+        {
+            try
+            {
+                var genres = await this._musicRepository.GetGenres();
+                return Ok(genres);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
+        }
+
         [HttpPost("Create")]
-        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> Create([Bind("Id,Name,Genre,Artist,Language,CoverImagePath,ImageStorageName,ImageFile")] Music music, StorageOptions storageOptions)
         {
             if (!ModelState.IsValid)
@@ -84,7 +102,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpPut("Edit")]
-        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> Edit(Guid? existingMusicId, [Bind("Id,Name,Genre,Artist,Language,CoverImagePath,ImageStorageName,ImageFile")] Music changed, StorageOptions storageOptions)
         {
             if (!existingMusicId.HasValue || changed == null)
@@ -127,7 +144,6 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         }
 
         [HttpDelete("Delete")]
-        [Authorize(Roles = "Administrator, Employee")]
         public async Task<ActionResult<int>> DeleteConfirmed(Guid id, StorageOptions storageOptions)
         {
             try

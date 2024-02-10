@@ -1,0 +1,47 @@
+.adminadd {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    color: #292A2D;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #292A2D;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+input {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    color: #292A2D;
+}
+
+button {
+    background-color: #FFD930;
+    color: #292A2D;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #E6C800; /* Darker yellow on hover */
+}
+
+.message {
+    margin-top: 10px;
+    color: #FFD930;
+}

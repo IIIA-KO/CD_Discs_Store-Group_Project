@@ -7,13 +7,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize(Roles = "Administrator, Employee")]
+    [Authorize(Roles = "Administrator,Employee")]
     public class ClientsController(IClientRepository clientRepository) : Controller
     {
         private readonly IClientRepository _clientRepository = clientRepository;
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IReadOnlyList<Client>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0)
+        public async Task<ActionResult<IReadOnlyList<Client>>> GetAll(string? searchText, SortOrder sortOrder, string? sortField, int skip = 0, int take = 12)
         {
             var model = new Processable<Client>
             {
@@ -21,10 +21,13 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                 SortOrder = sortOrder,
                 SortFieldName = sortField ?? "id",
                 Skip = skip,
-                PageSize = 20
+                PageSize = take
             };
 
-            return Ok(await this._clientRepository.GetProcessedAsync(model));
+            model.Items = await this._clientRepository.GetProcessedAsync(model);
+            model.CountItems = await this._clientRepository.GetProcessedCountAsync(model);
+
+            return Ok(model);
         }
 
         [HttpGet("GetClient")]

@@ -10,12 +10,6 @@ const FilmDetails = () => {
   const [films, setFilms] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  function mapFilms(){
-    return films.map((film) => (
-      <Card key={film.id} item={film} />
-    ))
-  }
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -24,10 +18,13 @@ const FilmDetails = () => {
         const data1 = await response1.json();
         setItems(data1);
 
-        let urlList = "https://localhost:7117/Film/GetAll?skip=0&searchText=" + data1.genre + "&sortOrder=1";
+        let urlList = "https://localhost:7117/Film/GetAll?searchText=" + data1.genre + "&sortField=genre&skip=0";
+        console.log(urlList)
         const response2 = await fetch(urlList);
         const data2 = await response2.json();
-        setFilms(data2);
+        console.log(data2)
+        const filteredFilms = data2.filter(item => item.genre === data1.genre).slice(0, 4);
+        setFilms(filteredFilms);
 
         setLoading(false);
       } catch (error) {
@@ -43,8 +40,8 @@ const FilmDetails = () => {
   return (
     <div>
       <div className="details">
-        <div className="details-image" >
-          <img src="https://w0.peakpx.com/wallpaper/627/792/HD-wallpaper-no-black-blank.jpg" alt="img" />
+        <div className="details-image">
+          <img src={items.coverImagePath} alt="img" />
         </div>
         <div className="details-info">
           <h1>{items.name}</h1>
@@ -53,7 +50,7 @@ const FilmDetails = () => {
             <p>Main role: <span>{items.mainRole}</span></p>
             <p>Age limit: <span>{items.ageLimit}+</span></p>
           </div>
-          <div className='d-flex genre'>
+          <div className=' genre'>
             <p>Genre:</p>
             <div className="genreParagraph"><p>{items.genre}</p></div>
           </div>
@@ -65,13 +62,13 @@ const FilmDetails = () => {
         <h2>You can also enjoy:</h2>
         {console.log(films)}
         {console.log(loading)}
-        <div className="films">
+        <div className="music">
           {!loading && films.length > 0 && (
-            mapFilms()
-        )}
-        {loading && <p>Loading films...</p>}
+            <CardList data={films} />
+          )}
+          {loading && <p>Loading films...</p>}
         </div>
-        
+
       </div>
     </div >
   )
