@@ -32,7 +32,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     return BadRequest("Failed to create an Employee. Check provided data.");
                 }
 
-                return Ok(new { Message = "Employee created successfuly.", model.UserName, model.Email });
+                return Ok(new { Message = "Employee created successfuly.", model.UserName, model.Email, model.Password });
             }
             catch (ArgumentException ex)
             {
@@ -61,7 +61,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     return BadRequest("Failed to create an Administrator. Check provided data.");
                 }
 
-                return Ok(new { Message = "Administrator created successfuly.", model.UserName, model.Email });
+                return Ok(new { Message = "Administrator created successfuly.", model.UserName, model.Email, model.Password });
             }
             catch (ArgumentException ex)
             {
@@ -75,7 +75,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
         private async Task<bool> CreateUserAsync(UserBaseWithPasswordDto model, string roleName)
         {
-            if (string.IsNullOrEmpty(roleName) || string.Equals(roleName, "Employee", StringComparison.OrdinalIgnoreCase) || string.Equals(roleName, "Administrator", StringComparison.OrdinalIgnoreCase))
+            if (!roleName.Equals("Employee", StringComparison.InvariantCultureIgnoreCase) && !roleName.Equals("Administrator", StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new ArgumentException("Failed to create user. Invalid role name was provided.", nameof(roleName));
             }
@@ -113,6 +113,10 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
             try
             {
                 var user = await this._userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return NotFound("User with specified UserId was not found.");
+                }
 
                 if (!await this._userManager.IsInRoleAsync(user, "Employee"))
                 {
@@ -126,7 +130,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     return BadRequest("Failed to edit the employee. Check provided data.");
                 }
 
-                return Ok("Successfuly edit employee data.");
+                return Ok(new { Message = "Successfuly edit employee data.", model.UserName, model.Email, model.Password });
             }
             catch (ArgumentNullException ex)
             {
@@ -148,11 +152,22 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
             try
             {
-                var user = await this._userManager.FindByIdAsync(userId);
+                var currentUser = await this._userManager.GetUserAsync(User);
+                var userToEdit = await this._userManager.FindByIdAsync(userId);
 
-                if (!await this._userManager.IsInRoleAsync(user, "Administrator"))
+                if (userToEdit == null)
                 {
-                    return BadRequest("Error: attempted to edit not an employee.");
+                    return NotFound("User with specified UserId was not found.");
+                }
+
+                if (!await this._userManager.IsInRoleAsync(userToEdit, "Administrator"))
+                {
+                    return BadRequest("You can only edit users with the role of Administrator.");
+                }
+
+                if (userToEdit.Id == currentUser.Id)
+                {
+                    return BadRequest("You cannot edit your own account.");
                 }
 
                 var result = await UpdateUserAsync(userId, model);
@@ -162,7 +177,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
                     return BadRequest("Failed to edit the employee. Check provided data.");
                 }
 
-                return Ok("Successfuly edit employee data.");
+                return Ok(new { Message = "Successfuly edit administrator data.", model.UserName, model.Email, model.Password });
             }
             catch (ArgumentNullException ex)
             {
@@ -190,7 +205,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 
                 if (!result.Succeeded)
                 {
-                    throw new Exception("Failed to update password");
+                    throw new Exception($"Failed to update password. {string.Join(",", result.Errors)}");
                 }
             }
 
@@ -202,25 +217,40 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
         [HttpDelete("DeleteUser/{id}")]
         public async Task<IActionResult> DeleteUser(string? id)
         {
-            if (string.IsNullOrEmpty(id))
+            try
             {
-                return BadRequest("Failed to delete the user. Id cannot be null or empty.");
+
+                if (string.IsNullOrEmpty(id))
+                {
+                    return BadRequest("Failed to delete the user. Id cannot be null or empty.");
+                }
+
+                var currentUser = await this._userManager.GetUserAsync(User);
+                var userToDelete = await this._userManager.FindByIdAsync(id);
+
+                if (userToDelete == null)
+                {
+                    return NotFound("User with specified UserId was not found.");
+                }
+
+                if (userToDelete.Id == currentUser.Id)
+                {
+                    return BadRequest("You cannot delete your own account.");
+                }
+
+                var result = await this._userManager.DeleteAsync(userToDelete);
+
+                if (!result.Succeeded)
+                {
+                    return BadRequest(result.Errors);
+                }
+
+                return Ok("User deleted successfuly");
             }
-
-            var user = await this._userManager.FindByIdAsync(id);
-
-            if (user == await this._userManager.GetUserAsync(User))
+            catch (Exception ex)
             {
-                return BadRequest("Failed to delete the user. You cannot delete yourself as an Administrator.");
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
             }
-
-            var result = await this._userManager.DeleteAsync(user);
-            if (!result.Succeeded)
-            {
-                return BadRequest(result.Errors);
-            }
-
-            return Ok("User deleted successfuly");
         }
 
         [HttpGet("Users")]
