@@ -24,6 +24,7 @@ import AdminMusic from './pages/AdminMusic/AdminMusic';
 import AdminMusicAdd from './pages/AdminMusic/AdminMusicAdd';
 import AdminMusicDelete from './pages/AdminMusic/AdminMusicDelete';
 import AdminMusicEdit from './pages/AdminMusic/AdminMusicEdit';
+import DiskDetails from './pages/DiskDetails/DiskDetails';
 
 
 import { useState } from 'react';
@@ -37,6 +38,7 @@ function App() {
                 <Routes>
                     <Route path='/' element={<Home />} />
                     <Route path='/disks' element={<Disks />} />
+                    <Route exact path='/disks/:id' element={<DiskDetails />} />
                     <Route path='/films' element={<Films />} />
                     <Route exact path="/films/:id" element={<FilmDetails />} />
                     <Route path='/music' element={<Music />} />
