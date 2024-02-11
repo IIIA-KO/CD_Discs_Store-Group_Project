@@ -29,5 +29,11 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
                 new { IdDisc = id });
             return (IReadOnlyList<OperationLog>)operationLogs ?? new List<OperationLog>();
         }
+
+        public async Task<Guid> GetOperationTypeByNameAsync(string typeName)
+        {
+            using IDbConnection dbConnection = this._context.CreateConnection();
+            return await dbConnection.QueryFirstAsync<Guid>($"SELECT Id FROM OperationType WHERE TypeName = {typeName}");
+        }
     }
 }
