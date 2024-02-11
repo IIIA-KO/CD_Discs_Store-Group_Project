@@ -1,78 +1,88 @@
-
-
 import React from 'react';
 import { useMutation, useQueryClient } from 'react-query';
 import axios from 'axios';
-import './Registration.css'
-
-
+import './Registration.css';
 const Registration = () => {
   const queryClient = useQueryClient();
+  const [registrationError, setRegistrationError] = React.useState(null);
 
-  // Функция мутации для отправки данных на сервер с помощью Axios
   const registerUser = async (formData) => {
-    const response = await axios.post('https://localhost:7117/Account/Register', formData);
-
-    if (!response.data.success) {
-      throw new Error(response.data.message);
+    try {
+      const response = await axios.post('https://localhost:7117/Account/Register', formData);
+  
+      setRegistrationError(null);
+      queryClient.invalidateQueries('userData');
+    } catch (error) {
+      console.error('Error during registration:', error);
+      setRegistrationError(
+        error.response?.data?.message || 'Ошибка регистрации. Пожалуйста, проверьте введенные данные.'
+      );
+      console.error(error.stack);
+      console.error('Response data:', error.response?.data);
     }
-    onSuccess(response.data.message); // its a success message from the server and the registration was successfully registered  
-    // Аннулировать и обновить данные пользователя после успешной регистрации.
-    queryClient.invalidateQueries('userData');
   };
+  
 
-  // React-Query useMutation hook
-  const { mutate, isLoading, error, isSuccess } = useMutation(registerUser);
+  const { mutate, isLoading, isSuccess } = useMutation(registerUser, {
+    mutationKey: ['registration'],
+    onMutate: async () => {
+      setRegistrationError(null);
+      await queryClient.cancelMutations('userData');
+    },
+    onError: (err) => {
+      console.error('Error during registration:', err);
+      setRegistrationError(
+        err.response?.data?.message || 'Ошибка регистрации. Пожалуйста, проверьте введенные данные.'
+      );
+      console.error(err.stack);
+      console.error('Response data:', err.response?.data);
+    },
+    onSuccess: (data) => {
+      console.log('Registration success:', data);
+      // Возможно, здесь вы захотите предпринять какие-то дополнительные действия после успешной регистрации
+    },
+  });
 
-  // Стан форми та перевірка
   const [formData, setFormData] = React.useState({
-    username: '',
+    userName: '',
     email: '',
     password: '',
     confirmPassword: '',
     phoneNumber: '',
     address: '',
     city: '',
-    birthday: '',
+    birthDay: '',
     marriedStatus: true,
     sex: true,
-    hasChild: false,
+    hasChild: true,
   });
 
   const [errors, setErrors] = React.useState({});
 
-  // Функція перевірки
   const validateForm = () => {
     const newErrors = {};
 
-
-    //  Перевірте, чи дійсна електронна адреса
     if (!formData.email.includes('@')) {
       newErrors.email = 'Invalid email address';
     }
 
-    // Перевірте, чи збігаються пароль і пароль підтвердження
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    // Перевірте, чи дійсний номер телефону 
     if (!/^\d{10}$/.test(formData.phoneNumber)) {
       newErrors.phoneNumber = 'Invalid phone number';
     }
 
-    // Перевірте, чи день народження є дійсною датою 
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(formData.birthday)) {
-      newErrors.birthday = 'Invalid birthday format (YYYY-MM-DD)';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(formData.birthDay)) {
+      newErrors.birthDay = 'Invalid birthday format (YYYY-MM-DD)';
     }
 
-    // Перевірте, чи вказано стать 
-    if (!formData.sex.trim()) {
+    if (formData.sex === null) {
       newErrors.sex = 'Sex is required';
     }
 
-    // Перевірте, чи надано "Has a Child".
-    if (!formData.hasChild) {
+    if (formData.hasChild === null) {
       newErrors.hasChild = 'Please confirm if you have a child';
     }
 
@@ -81,11 +91,9 @@ const Registration = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Обробка подання форми
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Перевірте форму перед надсиланням даних
     if (validateForm()) {
       mutate(formData);
     }
@@ -100,8 +108,8 @@ const Registration = () => {
           Username:
           <input
             type="text"
-            value={formData.username}
-            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+            value={formData.userName}
+            onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
           />
         </label>
         <br />
@@ -114,7 +122,6 @@ const Registration = () => {
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           />
         </label>
-        {/* Показати помилки перевірки*/}
         {errors.email && <div style={{ color: 'red' }}>{errors.email}</div>}
         <br />
 
@@ -126,7 +133,6 @@ const Registration = () => {
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           />
         </label>
-        {/* Показати помилки перевірки*/}
         {errors.password && <div style={{ color: 'red' }}>{errors.password}</div>}
         <br />
 
@@ -148,7 +154,6 @@ const Registration = () => {
             onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
           />
         </label>
-        {/* Показати помилки перевірки*/}
         {errors.phoneNumber && <div style={{ color: 'red' }}>{errors.phoneNumber}</div>}
         <br />
 
@@ -160,7 +165,6 @@ const Registration = () => {
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
           />
         </label>
-        {/* Показати помилки перевірки*/}
         {errors.address && <div style={{ color: 'red' }}>{errors.address}</div>}
         <br />
 
@@ -172,21 +176,19 @@ const Registration = () => {
             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
           />
         </label>
-        {/* Показати помилки перевірки*/}
         {errors.city && <div style={{ color: 'red' }}>{errors.city}</div>}
         <br />
 
         <label>
           Birthday:
           <input
-            type="date"
-            value={formData.birthday}
-            
-            onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+            type="text"
+            value={formData.birthDay}
+            onChange={(e) => setFormData({ ...formData, birthDay: e.target.value })}
+            placeholder="YYYY-MM-DD"
           />
         </label>
-        {/* Показати помилки перевірки*/}
-        {errors.birthday && <div style={{ color: 'red' }}>{errors.birthday}</div>}
+        {errors.birthDay && <div style={{ color: 'red' }}>{errors.birthDay}</div>}
         <br />
 
         <label>
@@ -194,20 +196,19 @@ const Registration = () => {
           <input
             type="radio"
             name="marriedStatus"
-            value="true"
-            checked={formData.marriedStatus === "true"}
-            onChange={(e) => setFormData({ ...formData, marriedStatus: e.target.value })}
+            value={true}
+            checked={formData.marriedStatus === true}
+            onChange={(e) => setFormData({ ...formData, marriedStatus: e.target.checked})}
           /> Married
           <input
             type="radio"
             name="marriedStatus"
-            value="false"
-            checked={formData.marriedStatus === "false"}
-            onChange={(e) => setFormData({ ...formData, marriedStatus: e.target.value })}
+            value={false}
+            checked={formData.marriedStatus === false}
+            onChange={(e) => setFormData({ ...formData, marriedStatus: e.target.checked })}
           /> Single
         </label>
-
-        {errors.marriedStatus && <div style={{ color: 'red' }}>{errors.marriedStatus.message}</div>}
+        {errors.marriedStatus && <div style={{ color: 'red' }}>{errors.marriedStatus}</div>}
         <br />
 
         <label>
@@ -215,23 +216,20 @@ const Registration = () => {
           <input
             type="radio"
             name="sex"
-            value="male"
-            checked={formData.sex === "male"}
-            onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
+            value={true}
+            checked={formData.sex === true}
+            onChange={() => setFormData({ ...formData, sex: true })}
           /> Male
           <input
             type="radio"
             name="sex"
-            value="female"
-            checked={formData.sex === "female"}
-            onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
+            value={false}
+            checked={formData.sex === false}
+            onChange={() => setFormData({ ...formData, sex: false })}
           /> Female
         </label>
-
-        {errors.sex && <div style={{ color: 'red' }}>{errors.sex.message}</div>}
+        {errors.sex && <div style={{ color: 'red' }}>{errors.sex}</div>}
         <br />
-
-
 
         <label>
           Has a Child:
@@ -239,23 +237,19 @@ const Registration = () => {
             type="checkbox"
             name="hasChild"
             checked={formData.hasChild}
-            onChange={(e) => setFormData({ ...formData, hasChild: e.target.checked })}
+            onChange={() => setFormData({ ...formData, hasChild: !formData.hasChild })}
           />
         </label>
-        {/* Показать ошибки валидации */}
-        {errors.hasChild && <div style={{ color: 'red' }}>{errors.hasChild.message}</div>}
+        {errors.hasChild && <div style={{ color: 'red' }}>{errors.hasChild}</div>}
         <br />
 
+        <button type="submit" disabled={isLoading || isSuccess}>Register</button>
 
-
-        {/* Submit button */}
-        <button type="submit" disabled={isSuccess} >Register</button>
-
+        {registrationError && <div style={{ color: 'red' }}>{registrationError}</div>}
+        {isSuccess && <div style={{ color: 'green' }}>Вы успешно зарегистрировались!</div>}
       </form>
     </div>
   );
 };
 
 export default Registration;
-
-

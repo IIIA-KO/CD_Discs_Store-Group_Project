@@ -1,95 +1,64 @@
-import React from 'react';
-import { useMutation, useQueryClient } from 'react-query';
+
+
+import React, { useState } from 'react';
+import { useMutation } from 'react-query';
 import axios from 'axios';
-import './login.css';
+import { useNavigate } from 'react-router-dom';
+import './Login.css';
 const Login = () => {
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [loginError, setLoginError] = useState(null); // Состояние для отслеживания ошибки входа
 
-  // Mutation function to send login data to the server using Axios
-  const loginUser = async ({ userName, password }) => {
-    const response = await axios.post('https://localhost:7117/Account/Login', {
-      userName,
-      password,
-    });
+  const loginMutation = useMutation((formData) =>
+    axios.post('https://localhost:7117/Account/Login', formData)
+  );
 
-    if (!response.data.success) {
-      throw new Error(response.data.message);
-    }
-
-    // Invalidate and refetch user data after successful login
-    queryClient.invalidateQueries('userData');
-  };
-
-  // React-Query useMutation hook
-  const { mutate } = useMutation(loginUser);
-
-  // Form state and validation
-  const [loginData, setLoginData] = React.useState({
-    userName: '',
-    password: '',
-  });
-
-  const [errors, setErrors] = React.useState({});
-
-  // Validation function
-  const validateForm = () => {
-    const newErrors = {};
-
-    // Add your validation logic here
-    // Example: Check if userName and password are provided
-    if (!loginData.userName.trim()) {
-      newErrors.userName = 'Username is required';
-    }
-
-    if (!loginData.password.trim()) {
-      newErrors.password = 'Password is required';
-    }
-
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle login submission
-  const handleLogin = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Подтвердите форму перед отправкой данных для входа.
-    if (validateForm()) {
-      mutate(loginData);
+    const userName = e.target.elements.userName.value;
+    const password = e.target.elements.password.value;
+
+    try {
+      await loginMutation.mutateAsync({ userName, password });
+      // Переход на компонент Profile после успешного входа
+      navigate('/profile');
+    } catch (error) {
+      console.error('Ошибка авторизации:', error);
+      // Установка ошибки в состояние, чтобы отобразить сообщение об ошибке
+      setLoginError('Логин или пароль неверны');
     }
   };
 
   return (
-    <div className="login-container">
-    <form className='login-form' onSubmit={handleLogin}>
-      {/* Username field */}
-      <label>
-        Username:
-        <input
-          type="text"
-          value={loginData.userName}
-          onChange={(e) => setLoginData({ ...loginData, userName: e.target.value })}
-        />
-      </label>
-      {errors.userName && <div style={{ color: 'red' }}>{errors.userName}</div>}
+    <div className='login'>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="userName">Username:</label>
+          <input type="text" id="userName" name="userName" required />
+        </div>
+        <div>
+          <label htmlFor="password">Password:</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <div>
+          <button type="submit" disabled={loginMutation.isLoading}>
+            {loginMutation.isLoading ? 'Logging in...' : 'Log in'}
+          </button>
+        </div>
+      </form>
 
-      {/* Password field */}
-      <label>
-        Password:
-        <input
-          type="password"
-          value={loginData.password}
-          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-        />
-      </label>
-      {errors.password && <div style={{ color: 'red' }}>{errors.password}</div>}
-
-      {/* Submit button */}
-      <button type="submit">Login</button>
-    </form>
+      {/* Отображение блока с сообщением об успешном или неудачном входе */}
+      {loginError && <div style={{ color: 'red' }}>{loginError}</div>}
+      {loginMutation.isSuccess && <div style={{ color: 'green' }}>Успешный вход!</div>}
     </div>
   );
 };
 
 export default Login;
+
+
+
+
+
