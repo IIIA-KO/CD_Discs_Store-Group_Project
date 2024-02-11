@@ -6,7 +6,7 @@ const Disks = () => {
   const [discs, setDiscs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 20;
+  const itemsPerPage = 12;
 
   useEffect(() => {
     const fetchDiscs = async () => {
