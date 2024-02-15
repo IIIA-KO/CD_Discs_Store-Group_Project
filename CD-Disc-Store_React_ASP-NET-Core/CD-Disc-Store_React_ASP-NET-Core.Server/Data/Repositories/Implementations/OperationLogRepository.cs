@@ -33,7 +33,15 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories.Implementati
         public async Task<Guid> GetOperationTypeByNameAsync(string typeName)
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
-            return await dbConnection.QueryFirstAsync<Guid>($"SELECT Id FROM OperationType WHERE TypeName = {typeName}");
+            return await dbConnection.QueryFirstAsync<Guid>($"SELECT Id FROM OperationType WHERE TypeName = @TypeName", new { TypeName = typeName });
+        }
+
+        public async Task<IReadOnlyList<OperationLog>> GetByOrderIdAsync(Guid orderId)
+        {
+            IDbConnection dbConnection = this._context.CreateConnection();
+            var items = await dbConnection.QueryAsync<OperationLog>("SELECT * FROM OperationLog WHERE IdOrder = @OrderId", new { OrderId = orderId });
+
+            return (IReadOnlyList<OperationLog>)items ?? new List<OperationLog>();
         }
     }
 }

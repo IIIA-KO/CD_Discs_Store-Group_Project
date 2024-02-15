@@ -1,7 +1,6 @@
 using Dapper;
 using System.Data;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 using CD_Disc_Store_React_ASP_NET_Core.Server.Utilities.Processors;
 
@@ -53,10 +52,22 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories
             }
         }
 
+        public async Task<int> AddAsync(TEntity entity, IDbConnection dbConnection, IDbTransaction dbTransaction)
+        {
+            try
+            {
+                return await dbConnection.ExecuteAsync(GetInsertSql(), entity, dbTransaction);
+            }
+            catch (Exception ex)
+            {
+                throw new DatabaseOperationException($"Error while adding the {GetTableName()} to the database. {ex.Message}", ex);
+            }
+        }
+
         private string GetInsertSql()
         {
             var properties = GetPropertiesWithoutKey();
-            return $"INSERT INTO {GetTableName()} ({string.Join(", ", properties)}) VALUES (@{string.Join(", @", properties)})";
+            return $"INSERT INTO [{GetTableName()}] ({string.Join(", ", properties)}) VALUES (@{string.Join(", @", properties)})";
         }
 
         public async Task<int> UpdateAsync(TEntity entity)
@@ -80,7 +91,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories
         private string GetUpdateSql()
         {
             var properties = GetPropertiesWithoutKey();
-            return $"UPDATE {GetTableName()} SET {string.Join(", ", properties.Select(p => $"{p} = @{p}"))} WHERE Id = @Id";
+            return $"UPDATE [{GetTableName()}] SET {string.Join(", ", properties.Select(p => $"{p} = @{p}"))} WHERE Id = @Id";
         }
 
         private IEnumerable<string> GetPropertiesWithoutKey()
@@ -95,7 +106,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server.Data.Repositories
         public async Task<int> DeleteAsync(Guid id)
         {
             using IDbConnection dbConnection = this._context.CreateConnection();
-            var result = await dbConnection.ExecuteAsync($"DELETE FROM {GetTableName()} WHERE Id = @Id", new { Id = id });
+            var result = await dbConnection.ExecuteAsync($"DELETE FROM [{GetTableName()}] WHERE Id = @Id", new { Id = id });
             return result;
         }
 

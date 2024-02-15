@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { useMutation } from 'react-query';
 import axios from 'axios';
@@ -7,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import './Login.css';
 const Login = () => {
   const navigate = useNavigate();
-  const [loginError, setLoginError] = useState(null); // Состояние для отслеживания ошибки входа
+  const [loginError, setLoginError] = useState(null);
 
   const loginMutation = useMutation((formData) =>
     axios.post('https://localhost:7117/Account/Login', formData)
@@ -21,12 +19,10 @@ const Login = () => {
 
     try {
       await loginMutation.mutateAsync({ userName, password });
-      // Переход на компонент Profile после успешного входа
       navigate('/profile');
     } catch (error) {
-      console.error('Ошибка авторизации:', error);
-      // Установка ошибки в состояние, чтобы отобразить сообщение об ошибке
-      setLoginError('Логин или пароль неверны');
+      console.error('Authorization error:', error);
+      setLoginError('Login or password is incorrect');
     }
   };
 
@@ -49,16 +45,10 @@ const Login = () => {
         </div>
       </form>
 
-      {/* Отображение блока с сообщением об успешном или неудачном входе */}
       {loginError && <div style={{ color: 'red' }}>{loginError}</div>}
-      {loginMutation.isSuccess && <div style={{ color: 'green' }}>Успешный вход!</div>}
+      {loginMutation.isSuccess && <div style={{ color: 'green' }}>Login success!</div>}
     </div>
   );
 };
 
 export default Login;
-
-
-
-
-
