@@ -25,16 +25,16 @@ const AdminMusic = () => {
         .then(res => res.json())
         .then(data => {
             //console.log(data.length);
-            if (data.length == 0&&pageNumber>0) {
+            if (data.items.length == 0&&pageNumber>0) {
                 handlePagination(pageNumber-1, itemsPerPage);
                 document.getElementById("rightarrow").disabled = true;
-            } else if (data.length>0){
+            } else if (data.items.length>0){
                 document.getElementById("rightarrow").disabled = false;
             }
-            if(data.length>itemsPerPage){
-                data=data.slice(0, itemsPerPage);
+            if(data.items.length>itemsPerPage){
+                data.items=data.items.slice(0, itemsPerPage);
             }
-            setItems(data);
+            setItems(data.items);
         })
         .catch(error => console.error(error));
         setCurrentPage(pageNumber);

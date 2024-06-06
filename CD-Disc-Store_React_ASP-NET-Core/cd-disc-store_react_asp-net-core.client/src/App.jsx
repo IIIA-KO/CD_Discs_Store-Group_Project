@@ -6,7 +6,7 @@ import Music from './pages/Music/Music'
 
 import Cart from './pages/Cart/Cart';
 import Profile from './pages/Profile/Profile';
-import {BrowserRouter,Routes,Route,Link} from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import Header from './Header/Header';
 import Footer from './Footer/Footer';
 import FilmDetails from './pages/FilmDetails/FilmDetails'
@@ -27,6 +27,7 @@ import AdminMusic from './pages/AdminMusic/AdminMusic';
 import AdminMusicAdd from './pages/AdminMusic/AdminMusicAdd';
 import AdminMusicDelete from './pages/AdminMusic/AdminMusicDelete';
 import AdminMusicEdit from './pages/AdminMusic/AdminMusicEdit';
+import DiskDetails from './pages/DiskDetails/DiskDetails';
 
 
 
@@ -38,34 +39,31 @@ function App() {
         <>
             <Header />
             <main>
-            <Routes>
-                <Route path='/' element={<Home />} />
-                <Route path='/disks' element={<Disks />} />
-                <Route path='/films' element={<Films />} />
-                <Route exact path="/films/:id" element={<FilmDetails/>} />
-                <Route path='/music' element={<Music />} />
-                <Route exact path="/music/:id" element={<MusicDetails/>} />
-                <Route path='/cart' element={<Cart items={cartItems} />} />
-                <Route path='/profile' element={<Profile />} />
+                <Routes>
+                    <Route path='/' element={<Home />} />
+                    <Route path='/disks' element={<Disks />} />
+                    <Route exact path='/disks/:id' element={<DiskDetails />} />
+                    <Route path='/films' element={<Films />} />
+                    <Route exact path="/films/:id" element={<FilmDetails />} />
+                    <Route path='/music' element={<Music />} />
+                    <Route exact path="/music/:id" element={<MusicDetails />} />
+                    <Route path='/cart' element={<Cart items={cartItems} />} />
+                    <Route path='/profile' element={<Profile />} />
+                    <Route path='/adminpanel' element={<AdminPanel />} />
+                    <Route path='/adminpanel/disks' element={<AdminDisks />} />
+                    <Route path='/adminpanel/disks/add' element={<AdminDisksAdd />} />
+                    <Route path='/adminpanel/disks/delete/:id' element={<AdminDisksDelete />} />
+                    <Route path='/adminpanel/disks/edit/:id' element={<AdminDisksEdit />} />
+                    <Route path='/adminpanel/films' element={<AdminFilms />} />
+                    <Route path='/adminpanel/films/add' element={<AdminFilmsAdd />} />
+                    <Route path='/adminpanel/films/delete/:id' element={<AdminFilmsDelete />} />
+                    <Route path='/adminpanel/films/edit/:id' element={<AdminFilmsEdit />} />
+                    <Route path='/adminpanel/music' element={<AdminMusic />} />
+                    <Route path='/adminpanel/music/add' element={<AdminMusicAdd />} />
+                    <Route path='/adminpanel/music/delete/:id' element={<AdminMusicDelete />} />
+                    <Route path='/adminpanel/music/edit/:id' element={<AdminMusicEdit />} />
 
-                <Route path="/authentication" element={<Authentication />} />
-
-                <Route path='/adminpanel' element={<AdminPanel />} />
-                <Route path='/adminpanel/disks' element={<AdminDisks />} />
-                <Route path='/adminpanel/disks/add' element={<AdminDisksAdd />} />
-                <Route path='/adminpanel/disks/delete/:id' element={<AdminDisksDelete />} />
-                <Route path='/adminpanel/disks/edit/:id' element={<AdminDisksEdit />} />
-                <Route path='/adminpanel/films' element={<AdminFilms />} />
-                <Route path='/adminpanel/films/add' element={<AdminFilmsAdd />} />
-                <Route path='/adminpanel/films/delete/:id' element={<AdminFilmsDelete/>} />
-                <Route path='/adminpanel/films/edit/:id' element={<AdminFilmsEdit />} />
-                <Route path='/adminpanel/music' element={<AdminMusic />} />
-                <Route path='/adminpanel/music/add' element={<AdminMusicAdd/>} />
-                <Route path='/adminpanel/music/delete/:id' element={<AdminMusicDelete />} />
-                <Route path='/adminpanel/music/edit/:id' element={<AdminMusicEdit />} />
-
-
-            </Routes>
+                </Routes>
             </main>
             <Footer />
         </>
