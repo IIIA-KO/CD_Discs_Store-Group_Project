@@ -4,10 +4,13 @@ import MusicSearch from '../../MusicSearch/MusicSearch';
 import Pagination from '../../Pagination/Pagination';
 
 const Music = () => {
+
+
   const [musics, setMusics] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 12;
+
 
   useEffect(() => {
     const fetchMusics = async () => {
@@ -28,12 +31,17 @@ const Music = () => {
     setCurrentPage(pageNumber);
   };
 
+  const handleTotalPagesUpdate = (total) => {
+    setTotalPages(total);
+  };
+
   return (
     <div>
       <MusicSearch
         musics={musics}
         currentPage={currentPage}
-        itemsPerPage={itemsPerPage} />
+        itemsPerPage={itemsPerPage}
+        onUpdateTotalPages={handleTotalPagesUpdate} />
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}

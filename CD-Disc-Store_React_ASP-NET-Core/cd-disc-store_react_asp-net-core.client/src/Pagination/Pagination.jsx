@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import "./Pagination.css"
+
 const Pagination = ({ currentPage, totalPages, onPageClick }) => {
   const pageNumbers = [];
   const maxPageNumbers = 5;
@@ -19,17 +20,21 @@ const Pagination = ({ currentPage, totalPages, onPageClick }) => {
       pageNumbers.push(i);
   }
 
+  const handleClick = (pageNumber) => {
+    onPageClick(pageNumber);
+  };
+
   return (
     <div className='pagination'>
-      <button disabled={currentPage === 1} onClick={() => onPageClick(1)}>First</button>
-      <button disabled={currentPage === 1} onClick={() => onPageClick(currentPage - 1)}>Prev</button>
+      <button disabled={currentPage === 1} onClick={() => handleClick(1)}>First</button>
+      <button disabled={currentPage === 1} onClick={() => handleClick(currentPage - 1)}>Prev</button>
       {pageNumbers.map((number) => (
-        <button key={number} onClick={() => onPageClick(number)} className={currentPage === number ? 'active' : ''}>
+        <button key={number} onClick={() => handleClick(number)} className={currentPage === number ? 'active' : ''}>
           {number}
         </button>
       ))}
-      <button disabled={currentPage === totalPages} onClick={() => onPageClick(currentPage + 1)}>Next</button>
-      <button disabled={currentPage === totalPages} onClick={() => onPageClick(totalPages)}>Last</button>
+      <button disabled={currentPage === totalPages} onClick={() => handleClick(currentPage + 1)}>Next</button>
+      <button disabled={currentPage === totalPages} onClick={() => handleClick(totalPages)}>Last</button>
     </div>
   );
 };

@@ -21,7 +21,7 @@ namespace CD_Disc_Store_React_ASP_NET_Core.Server
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowClientProjectOrigin",
-                    builder => builder.WithOrigins("https://localhost:5174")
+                    builder => builder.WithOrigins("https://localhost:5173")
                         .AllowAnyMethod()
                         .AllowAnyHeader());
             });

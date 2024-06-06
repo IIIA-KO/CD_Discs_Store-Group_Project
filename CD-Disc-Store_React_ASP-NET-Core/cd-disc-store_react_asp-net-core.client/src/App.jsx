@@ -10,6 +10,9 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import Header from './Header/Header';
 import Footer from './Footer/Footer';
 import FilmDetails from './pages/FilmDetails/FilmDetails'
+
+import Authentication from './Authentication/Authentication';
+
 import MusicDetails from './pages/MusicDetails/MusicDetails'
 import AdminPanel from './pages/AdminPanel/AdminPanel';
 import AdminDisks from './pages/AdminDisks/AdminDisks';
@@ -25,6 +28,7 @@ import AdminMusicAdd from './pages/AdminMusic/AdminMusicAdd';
 import AdminMusicDelete from './pages/AdminMusic/AdminMusicDelete';
 import AdminMusicEdit from './pages/AdminMusic/AdminMusicEdit';
 import DiskDetails from './pages/DiskDetails/DiskDetails';
+
 
 
 import { useState } from 'react';

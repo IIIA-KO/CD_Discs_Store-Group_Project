@@ -1,13 +1,15 @@
-import React from 'react';
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import FilmSearch from '../../FilmSearch/FilmSearch';
 import Pagination from '../../Pagination/Pagination';
+
+
 
 const Films = () => {
   const [films, setFilms] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 12;
+
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -26,15 +28,19 @@ const Films = () => {
 
   const handlePageClick = (pageNumber) => {
     setCurrentPage(pageNumber);
-    console.log(currentPage);
+  };
+
+  const handleTotalPagesUpdate = (total) => {
+    setTotalPages(total);
   };
 
   return (
     <div>
-      <FilmSearch 
-        films={films} 
+      <FilmSearch
+        films={films}
         currentPage={currentPage}
-        itemsPerPage={itemsPerPage} />
+        itemsPerPage={itemsPerPage}
+        onUpdateTotalPages={handleTotalPagesUpdate} />
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}

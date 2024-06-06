@@ -6,7 +6,7 @@ const Disks = () => {
   const [discs, setDiscs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 20;
+  const itemsPerPage = 12;
 
   useEffect(() => {
     const fetchDiscs = async () => {
@@ -29,12 +29,17 @@ const Disks = () => {
     setCurrentPage(pageNumber);
   };
 
+  const handleTotalPagesUpdate = (total) => {
+    setTotalPages(total);
+  };
+
   return (
     <div>
       <DiskSearch
         discs={discs}
         currentPage={currentPage}
-        itemsPerPage={itemsPerPage} />
+        itemsPerPage={itemsPerPage}
+        onUpdateTotalPages={handleTotalPagesUpdate} />
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}

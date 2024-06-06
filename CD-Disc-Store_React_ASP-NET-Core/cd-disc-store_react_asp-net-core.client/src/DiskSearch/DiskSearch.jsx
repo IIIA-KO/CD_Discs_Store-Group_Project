@@ -3,10 +3,11 @@ import "./DiskSearch.css"
 import DiskCardList from '../DiskCardList/DiskCardList';
 import Cart from '../pages/Cart/Cart';
 
-const DiskSearch = ({discs, currentPage, itemsPerPage}) => {
+const DiskSearch = ({discs, currentPage, itemsPerPage, onUpdateTotalPages}) => {
   const [searchText, setSearchText] = useState('');
   const [cartItems, setCartItems] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     const fetchSearchResults = async () => {
@@ -14,6 +15,8 @@ const DiskSearch = ({discs, currentPage, itemsPerPage}) => {
         const response = await fetch(`https://localhost:7117/Discs/GetAll?searchText=${searchText}&skip=${(currentPage - 1) * itemsPerPage}&take=${itemsPerPage}`);
         const data = await response.json();
         setSearchResults(data.items);
+        setTotalItems(data.countItems);
+        onUpdateTotalPages(Math.ceil(data.countItems / itemsPerPage));
       } catch (error) {
         console.error(error);
       }

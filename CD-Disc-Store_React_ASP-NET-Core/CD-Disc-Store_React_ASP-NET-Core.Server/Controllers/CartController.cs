@@ -1,99 +1,114 @@
-using Microsoft.AspNetCore.Authorization;
+using System.Data;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Models;
+using CD_Disc_Store_React_ASP_NET_Core.Server.Data.Contexts;
 
 namespace CD_Disc_Store_React_ASP_NET_Core.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class CartController(IOrderItemRepository orderItemRepository, IOrderRepository orderRepository, IOperationLogRepository operationLogRepository) : Controller
+    public class CartController(
+        IDapperContext context,
+        IOrderItemRepository orderItemRepository,
+        IOrderRepository orderRepository,
+        IOperationLogRepository operationLogRepository,
+        IClientRepository clientRepository) : Controller
     {
+        private readonly IDapperContext _context = context;
         private readonly IOrderItemRepository _orderItemRepository = orderItemRepository;
         private readonly IOrderRepository _orderRepository = orderRepository;
         private readonly IOperationLogRepository _operationLogRepository = operationLogRepository;
+        private readonly IClientRepository _clientRepository = clientRepository;
 
         [HttpPost("CreateOrder")]
-        [Authorize]
-        public async Task<IActionResult> CreateOrder([FromBody] CartOrderViewModel model)
+        [Authorize(Roles = "Client")]
+        public async Task<IActionResult> CreateOrder(CartDto[] items)
         {
+            using IDbConnection dbConnection = this._context.CreateConnection();
+
+            dbConnection.Open();
+            using var transaction = dbConnection.BeginTransaction();
+
             try
             {
-                int orderItemsAdded = 0;
-                int ordersAdded = 0;
-                int operationLogsAdded = 0;
-
-                foreach (var orderItem in model.OrderItems)
+                var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (id == null)
                 {
-                    if (await _orderItemRepository.AddAsync(orderItem) == 1)
+                    return BadRequest(new { Message = "User identifier not found in claims." });
+                }
+
+                var client = await _clientRepository.GetByUserIdAsync(id);
+
+                var order = new Order
+                {
+                    IdClient = client.Id,
+                    OperationDateTimeStart = DateTime.Now,
+                    OperationDateTimeEnd = DateTime.Now
+                };
+
+                await _orderRepository.AddAsync(order, dbConnection, transaction);
+
+                var orderItems = items
+                    .GroupBy(item => item.IdDisc)
+                    .Select(group => new OrderItem
                     {
-                        orderItemsAdded++;
-                    }
+                        Id = Guid.NewGuid(),
+                        IdOrder = order.Id,
+                        IdDisc = group.Key,
+                        Quantity = group.Sum(item => item.Quantity)
+                    })
+                    .ToList();
+
+                foreach (var item in orderItems)
+                {
+                    await this._orderItemRepository.AddAsync(item, dbConnection, transaction);
                 }
 
-                foreach (var order in model.Orders)
+                var operationLog = new OperationLog
                 {
-                    if (await _orderRepository.AddAsync(order) == 1)
-                    {
-                        ordersAdded++;
-                    }
-                }
+                    IdOrder = order.Id,
+                    OperationType = await _operationLogRepository.GetOperationTypeByNameAsync("Purchase")
+                };
 
-                foreach (var operation in model.OperationLogs)
-                {
-                    if (await _operationLogRepository.AddAsync(operation) == 1)
-                    {
-                        operationLogsAdded++;
-                    }
-                }
+                await _operationLogRepository.AddAsync(operationLog, dbConnection, transaction);
 
-                if (orderItemsAdded + ordersAdded + operationLogsAdded == 0)
-                {
-                    return BadRequest(new { Message = "No records were added. Check the provided data." });
-                }
+                transaction.Commit();
 
-                return Ok(new
-                {
-                    Message = "Orders created successfully",
-                    OrderItemsAdded = orderItemsAdded,
-                    OrdersAdded = ordersAdded,
-                    OperationLogsAdded = operationLogsAdded
-                });
+                return Ok(new { Message = "Order created successfully" });
             }
             catch (Exception ex)
             {
+                transaction.Rollback();
                 return StatusCode(500, $"Internal Server Error: {ex.Message}");
             }
         }
 
         [HttpDelete("DeleteOrder")]
         [Authorize(Roles = "Administrator,Employee")]
-        public async Task<IActionResult> DeleteOrder(Guid? id)
+        public async Task<IActionResult> DeleteOrder(Guid id)
         {
             try
             {
-                var orderItem = await _orderItemRepository.GetByIdAsync(id);
-
-                var processable = new Processable<OperationLog>
+                var orderItems = await _orderItemRepository.GetByOrderIdAsync(id);
+                foreach (var orderItem in orderItems)
                 {
-                    SearchText = $"IdOrder = {orderItem.IdOrder}",
-                };
+                    await _orderItemRepository.DeleteAsync(orderItem.Id);
+                }
 
-                var operationLog = _operationLogRepository.GetProcessedAsync(processable).Result.FirstOrDefault();
-
-                if (operationLog != null)
+                var operationLogs = await _operationLogRepository.GetByOrderIdAsync(id);
+                foreach (var operationLog in operationLogs)
                 {
                     await _operationLogRepository.DeleteAsync(operationLog.Id);
                 }
-                await _orderRepository.DeleteAsync(orderItem.IdOrder);
-                var result = await this._orderItemRepository.DeleteAsync(orderItem.Id);
 
-                if (result == 1)
-                {
-                    return Ok(new { Message = "Order item deleted successfully", MusicId = id });
-                }
-                else
-                {
-                    return BadRequest(new { Message = $"No records were deleted. Check the provided data. Rows affected {result}" });
-                }
+                var deletedOrderCount = await _orderRepository.DeleteAsync(id);
+
+                return deletedOrderCount > 0
+                    ? Ok(new { Message = "Order deleted successfully", OrderId = id })
+                    : BadRequest(new { Message = "No records were deleted. Check the provided orderId." });
             }
             catch (Exception ex)
             {
